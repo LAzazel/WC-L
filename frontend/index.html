@@ -21,7 +21,7 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="static/css/fantasy.css?v=52" />
+    <link rel="stylesheet" href="static/css/fantasy.css?v=69" />
   </head>
   <body data-view="home">
     <header class="site-header">
@@ -297,8 +297,9 @@
               <button type="button" class="btn" data-nav="home">На главную</button>
               <button type="button" class="btn btn-ghost" id="btn-logout-2">Выйти</button>
             </div>
-            <div class="profile-footer-forgot-wrap">
-              <button type="button" class="btn btn-ghost" id="btn-profile-forgot-password">Забыл пароль</button>
+            <div class="profile-footer-actions-trailing">
+              <button type="button" class="btn" id="btn-profile-change-name">Сменить имя</button>
+              <button type="button" class="btn btn-ghost" id="btn-profile-change-password">Изменить пароль</button>
             </div>
           </div>
         </div>
@@ -390,6 +391,22 @@
           </div>
         </form>
       </div>
+      <div
+        id="profile-modal-password-hint"
+        class="profile-modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-password-hint-title"
+      >
+        <h3 id="profile-modal-password-hint-title" class="profile-modal-title">Изменить пароль</h3>
+        <p class="profile-modal-hint">
+          Чтобы изменить пароль, нажмите «Забыл пароль» — откроется подсказка, как восстановить доступ.
+        </p>
+        <div class="form-actions profile-modal-actions">
+          <button type="button" class="btn" id="btn-profile-password-hint-cancel">Закрыть</button>
+          <button type="button" class="btn btn-primary" id="btn-profile-password-hint-to-forgot">Забыл пароль</button>
+        </div>
+      </div>
       <div id="profile-modal-forgot" class="profile-modal hidden" role="dialog" aria-modal="true">
         <h3 class="profile-modal-title">Забыли пароль?</h3>
         <p class="profile-modal-hint">
@@ -411,6 +428,6 @@
       aria-hidden="true"
     />
 
-    <script src="static/js/app.js?v=40" defer></script>
+    <script src="static/js/app.js?v=49" defer></script>
   </body>
 </html>

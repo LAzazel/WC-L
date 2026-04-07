@@ -1024,28 +1024,38 @@
           <div class="profile-top-band">
             <div class="profile-top-inner">
               <div class="profile-avatar-shell">
-                <div class="profile-avatar-row">
-                  <div class="profile-avatar-display">
-                    <div class="profile-avatar-stack">
-                      <div class="profile-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue: ${hue}">
-                        <div class="profile-avatar-inner">
-                          <img class="profile-avatar-img" src="${avatarUrl}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
-                          <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
-                        </div>
+                <div class="profile-avatar-column">
+                  <div class="profile-avatar-stack">
+                    <div class="profile-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue: ${hue}">
+                      <div class="profile-avatar-inner">
+                        <img class="profile-avatar-img" src="${avatarUrl}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
+                        <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
                       </div>
-                      <img class="profile-avatar-frame-deco is-hidden" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                     </div>
+                    <img class="profile-avatar-frame-deco is-hidden" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                   </div>
-                  <div class="profile-avatar-controls">
-                    <button type="button" class="profile-avatar-edit-btn" id="profile-avatar-edit-btn" aria-expanded="false" aria-controls="profile-avatar-menu" aria-haspopup="true" title="Выбрать голову Minecraft">✎</button>
-                    <button type="button" class="profile-avatar-upload-btn" id="profile-avatar-upload-btn" title="Загрузить аватар с устройства" aria-label="Загрузить аватар с устройства">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5l6.74-6.74z"/><line x1="16" y1="8" x2="2" y2="22"/></svg>
-                    </button>
-                    <button type="button" class="profile-avatar-frame-btn" id="profile-frame-edit-btn" aria-expanded="false" aria-controls="profile-frame-menu" aria-haspopup="true" title="Рамка аватара" aria-label="Выбор рамки">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><rect x="7" y="7" width="10" height="10" rx="1" ry="1"/></svg>
-                    </button>
-                    ${renderMcAvatarMenuHtml(me.username, variantId, me.id)}
-                    ${renderProfileFrameMenuHtml(profileFrameId)}
+                  <div class="profile-avatar-bookmarks" role="toolbar" aria-label="Голова Minecraft, рамка, свой аватар">
+                    <div class="profile-avatar-bookmark">
+                      <div class="profile-avatar-bookmark-tab">
+                        <button type="button" class="profile-avatar-edit-btn" id="profile-avatar-edit-btn" aria-expanded="false" aria-controls="profile-avatar-menu" aria-haspopup="true" title="Выбрать голову Minecraft">✎</button>
+                      </div>
+                      ${renderMcAvatarMenuHtml(me.username, variantId, me.id)}
+                    </div>
+                    <div class="profile-avatar-bookmark">
+                      <div class="profile-avatar-bookmark-tab">
+                        <button type="button" class="profile-avatar-frame-btn" id="profile-frame-edit-btn" aria-expanded="false" aria-controls="profile-frame-menu" aria-haspopup="true" title="Рамка аватара" aria-label="Выбор рамки">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><rect x="7" y="7" width="10" height="10" rx="1" ry="1"/></svg>
+                        </button>
+                      </div>
+                      ${renderProfileFrameMenuHtml(profileFrameId)}
+                    </div>
+                    <div class="profile-avatar-bookmark">
+                      <div class="profile-avatar-bookmark-tab">
+                        <button type="button" class="profile-avatar-upload-btn" id="profile-avatar-upload-btn" title="Загрузить аватар с устройства" aria-label="Загрузить аватар с устройства">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5l6.74-6.74z"/><line x1="16" y1="8" x2="2" y2="22"/></svg>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1054,63 +1064,10 @@
                 <div class="profile-hero-badges">${guardianBadge}${banBadge}</div>
                 ${adminBlock}
               </div>
-              <div class="profile-top-aside">
-                <div class="profile-account-toolbar">
-                  <button type="button" class="btn btn-ghost btn-small" id="btn-profile-change-name">Сменить имя</button>
-                </div>
-              </div>
             </div>
             <div class="profile-top-divider" aria-hidden="true"></div>
           </div>
-          <div class="profile-bottom">
-            <div class="profile-bottom-auth">
-              <div class="profile-password-section">
-                <h3 class="profile-password-heading">Смена пароля</h3>
-                <div id="profile-inline-password-msg" class="flash" role="status"></div>
-                <form id="form-profile-change-password">
-                  <div class="form-group">
-                    <label for="profile-pw-current">Текущий пароль</label>
-                    <input
-                      id="profile-pw-current"
-                      name="current_password"
-                      type="password"
-                      required
-                      minlength="8"
-                      maxlength="128"
-                      autocomplete="current-password"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="profile-pw-new">Новый пароль</label>
-                    <input
-                      id="profile-pw-new"
-                      name="new_password"
-                      type="password"
-                      required
-                      minlength="8"
-                      maxlength="128"
-                      autocomplete="new-password"
-                    />
-                  </div>
-                  <div class="form-group">
-                    <label for="profile-pw-new2">Новый пароль ещё раз</label>
-                    <input
-                      id="profile-pw-new2"
-                      name="new_password_confirm"
-                      type="password"
-                      required
-                      minlength="8"
-                      maxlength="128"
-                      autocomplete="new-password"
-                    />
-                  </div>
-                  <div class="form-actions profile-password-submit">
-                    <button type="submit" class="btn btn-primary">Обновить пароль</button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
+          <div class="profile-cabinet-spacer" aria-hidden="true"></div>
         </div>
       `;
 
@@ -1249,6 +1206,7 @@
 
   const profileModalOverlay = document.getElementById("profile-modal-overlay");
   const profileModalChange = document.getElementById("profile-modal-change-name");
+  const profileModalPasswordHint = document.getElementById("profile-modal-password-hint");
   const profileModalForgot = document.getElementById("profile-modal-forgot");
 
   function closeProfileModals() {
@@ -1256,11 +1214,22 @@
     profileModalOverlay.classList.add("hidden");
     profileModalOverlay.setAttribute("aria-hidden", "true");
     profileModalChange?.classList.add("hidden");
+    profileModalPasswordHint?.classList.add("hidden");
     profileModalForgot?.classList.add("hidden");
+  }
+
+  function openPasswordHintModal() {
+    if (!profileModalOverlay || !profileModalPasswordHint) return;
+    profileModalChange?.classList.add("hidden");
+    profileModalForgot?.classList.add("hidden");
+    profileModalPasswordHint.classList.remove("hidden");
+    profileModalOverlay.classList.remove("hidden");
+    profileModalOverlay.setAttribute("aria-hidden", "false");
   }
 
   function openChangeNameModal() {
     if (!profileModalOverlay || !profileModalChange) return;
+    profileModalPasswordHint?.classList.add("hidden");
     profileModalForgot?.classList.add("hidden");
     profileModalChange.classList.remove("hidden");
     profileModalOverlay.classList.remove("hidden");
@@ -1282,79 +1251,33 @@
   function openForgotModal() {
     if (!profileModalOverlay || !profileModalForgot) return;
     profileModalChange?.classList.add("hidden");
+    profileModalPasswordHint?.classList.add("hidden");
     profileModalForgot.classList.remove("hidden");
     profileModalOverlay.classList.remove("hidden");
     profileModalOverlay.setAttribute("aria-hidden", "false");
   }
 
   document.getElementById("view-profile")?.addEventListener("click", (e) => {
-    if (!e.target.closest("#btn-profile-change-name")) return;
-    if (!getToken()) {
-      showView("login");
+    if (e.target.closest("#btn-profile-change-name")) {
+      if (!getToken()) {
+        showView("login");
+        return;
+      }
+      openChangeNameModal();
       return;
     }
-    openChangeNameModal();
-  });
-
-  document.getElementById("btn-profile-forgot-password")?.addEventListener("click", openForgotModal);
-
-  document.getElementById("profile-content")?.addEventListener("submit", async (e) => {
-    const form = e.target;
-    if (!(form instanceof HTMLFormElement) || form.id !== "form-profile-change-password") return;
-    e.preventDefault();
-    const msg = document.getElementById("profile-inline-password-msg");
-    const submitBtn = form.querySelector('button[type="submit"]');
-    if (msg) {
-      msg.textContent = "";
-      msg.className = "flash";
-    }
-    const fd = new FormData(form);
-    const current_password = fd.get("current_password");
-    const new_password = fd.get("new_password");
-    const new_password_confirm = fd.get("new_password_confirm");
-    if (new_password !== new_password_confirm) {
-      if (msg) {
-        msg.className = "flash flash-error";
-        msg.textContent = "Новый пароль и повтор не совпадают.";
+    if (e.target.closest("#btn-profile-change-password")) {
+      if (!getToken()) {
+        showView("login");
+        return;
       }
+      openPasswordHintModal();
       return;
     }
-    if (submitBtn) {
-      submitBtn.disabled = true;
-      submitBtn.dataset.label = submitBtn.textContent;
-      submitBtn.textContent = "Сохраняем…";
-    }
-    try {
-      await apiFetch("/auth/me/password", { method: "PATCH", body: { current_password, new_password } });
-      form.reset();
-      if (msg) {
-        msg.className = "flash flash-success";
-        msg.textContent = "Пароль обновлён.";
-      }
-      const pm = document.getElementById("profile-message");
-      if (pm) {
-        pm.textContent = "";
-        pm.className = "flash";
-      }
-    } catch (err) {
-      if (msg) {
-        msg.className = "flash flash-error";
-        const detail = err.message || "";
-        const ru =
-          detail === "Current password is incorrect"
-            ? "Неверный текущий пароль."
-            : detail === "New password must differ from the current password"
-              ? "Новый пароль должен отличаться от текущего."
-              : detail;
-        msg.textContent = ru;
-      }
-    } finally {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.textContent = submitBtn.dataset.label || "Обновить пароль";
-      }
-    }
   });
+
+  document.getElementById("btn-profile-password-hint-cancel")?.addEventListener("click", closeProfileModals);
+  document.getElementById("btn-profile-password-hint-to-forgot")?.addEventListener("click", openForgotModal);
 
   document.getElementById("btn-profile-modal-cancel")?.addEventListener("click", closeProfileModals);
   document.getElementById("btn-profile-forgot-close")?.addEventListener("click", closeProfileModals);

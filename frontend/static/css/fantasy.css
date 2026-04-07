@@ -1134,6 +1134,11 @@ label.admin-filter input {
   overflow: visible;
 }
 
+#profile-content {
+  position: relative;
+  overflow: visible;
+}
+
 .profile-page-title {
   margin-bottom: 0.75rem;
 }
@@ -1476,6 +1481,8 @@ label.admin-filter input {
 .profile-top-main {
   flex: 1 1 auto;
   min-width: min(100%, 200px);
+  position: relative;
+  z-index: 0;
 }
 
 .profile-hero-name {
@@ -1565,9 +1572,10 @@ label.admin-filter input {
   gap: 0.75rem;
 }
 
-/* Аватар Minecraft: меню только по кнопке-карандашу */
+/* Аватар: три вертикальные «закладки» слева, за левой границей круга, вплотную; видна внешняя половина */
 .profile-avatar-shell {
   position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -1575,32 +1583,75 @@ label.admin-filter input {
   max-width: 100%;
 }
 
-.profile-avatar-row {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start;
-  gap: 1.65rem;
-}
-
-.profile-avatar-display {
-  flex-shrink: 0;
-}
-
-.profile-avatar-controls {
+.profile-avatar-column {
   position: relative;
-  flex-shrink: 0;
-  align-self: flex-start;
-  padding-top: 2px;
+  display: inline-block;
+  vertical-align: top;
+  line-height: 0;
+  max-width: 100%;
+}
+
+/* Не в потоке — аватар не двигается; сдвиг влево на padding панели + запас — за край плашки «Личный кабинет» */
+.profile-avatar-bookmarks {
+  position: absolute;
+  right: 100%;
+  top: 50%;
+  /* левее от обода; −3px к жёлтой рамке аватара */
+  transform: translate(calc(-28px - 3px), -50%);
+  margin-right: -3px;
+  width: 68px;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 0.45rem;
-  min-height: 44px;
-  min-width: 44px;
-  /* якорь для меню справа от кнопки — не перекрывает аватар */
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.35rem;
+  z-index: 4;
 }
 
-.profile-avatar-edit-btn {
+.profile-avatar-bookmark {
+  position: relative;
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  width: 22px;
+  height: 44px;
+  overflow: visible;
+  border-radius: 10px 0 0 10px;
+  border: 1px solid var(--border-gold-dim);
+  border-right: none;
+  background: linear-gradient(270deg, rgba(45, 38, 26, 0.98), rgba(18, 14, 24, 0.96));
+  box-shadow:
+    inset 0 0 0 1px rgba(201, 162, 39, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.35);
+  align-self: flex-end;
+  transition:
+    width 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+/* Клип только кнопки 22→44px; меню absolute — снаружи, иначе overflow:hidden съедает клики по плиткам */
+.profile-avatar-bookmark-tab {
+  overflow: hidden;
+  width: 100%;
+  height: 44px;
+  border-radius: 10px 0 0 10px;
+  flex-shrink: 0;
+}
+
+.profile-avatar-bookmark:hover,
+.profile-avatar-bookmark:focus-within,
+.profile-avatar-bookmark:has([aria-expanded="true"]) {
+  width: 44px;
+  border-color: var(--border-gold);
+  box-shadow:
+    inset 0 0 0 1px rgba(201, 162, 39, 0.2),
+    0 4px 16px rgba(0, 0, 0, 0.45),
+    0 0 14px var(--glow-gold);
+}
+
+.profile-avatar-bookmark .profile-avatar-edit-btn,
+.profile-avatar-bookmark .profile-avatar-upload-btn,
+.profile-avatar-bookmark .profile-avatar-frame-btn {
   width: 44px;
   height: 44px;
   margin: 0;
@@ -1608,112 +1659,70 @@ label.admin-filter input {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  border: 2px solid var(--border-gold);
+  border-radius: 10px 0 0 10px;
+  border: none;
+  border-right: 2px solid rgba(201, 162, 39, 0.35);
   background: linear-gradient(180deg, #3d3220, #2a2218);
   color: var(--border-gold);
+  cursor: pointer;
+  box-shadow: none;
+  flex-shrink: 0;
+  /* двигается только маска 22→44 (absolute — аватар не едет); значок дораскрывается внутри */
+  transform: translateX(0);
+  transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.profile-avatar-bookmark .profile-avatar-edit-btn {
   font-family: var(--font-heading);
   font-size: 1.15rem;
   line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 
-.profile-avatar-edit-btn:hover {
-  border-color: var(--border-gold);
-  box-shadow: 0 0 18px var(--glow-gold);
+.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-upload-btn, .profile-avatar-frame-btn):hover {
+  border-right-color: var(--border-gold);
+  box-shadow: inset 0 0 12px rgba(201, 162, 39, 0.12);
 }
 
-.profile-avatar-edit-btn:active {
-  transform: scale(0.96);
+.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-upload-btn, .profile-avatar-frame-btn):active {
+  transform: scale(0.97);
 }
 
-.profile-avatar-edit-btn:focus-visible {
+.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-upload-btn, .profile-avatar-frame-btn):focus-visible {
   outline: 2px solid var(--border-gold);
-  outline-offset: 3px;
+  outline-offset: 2px;
 }
 
-.profile-avatar-edit-btn[aria-expanded="true"] {
+.profile-avatar-bookmark .profile-avatar-edit-btn[aria-expanded="true"],
+.profile-avatar-bookmark .profile-avatar-frame-btn[aria-expanded="true"] {
   background: linear-gradient(180deg, #4a3d28, #352a18);
-  box-shadow: 0 0 22px var(--glow-gold);
+  box-shadow: inset 0 0 14px rgba(201, 162, 39, 0.15);
 }
 
-.profile-avatar-upload-btn {
-  width: 44px;
-  height: 44px;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 2px solid var(--border-gold);
-  background: linear-gradient(180deg, #3d3220, #2a2218);
-  color: var(--border-gold);
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-}
+@media (prefers-reduced-motion: reduce) {
+  .profile-avatar-bookmarks {
+    margin-right: -3px;
+    transform: translate(calc(-18px - 3px), -50%);
+  }
 
-.profile-avatar-upload-btn:hover {
-  border-color: var(--border-gold);
-  box-shadow: 0 0 18px var(--glow-gold);
-}
+  .profile-avatar-bookmark {
+    width: 44px;
+    transition: none;
+  }
 
-.profile-avatar-upload-btn:active {
-  transform: scale(0.96);
-}
-
-.profile-avatar-upload-btn:focus-visible {
-  outline: 2px solid var(--border-gold);
-  outline-offset: 3px;
-}
-
-.profile-avatar-frame-btn {
-  width: 44px;
-  height: 44px;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  border: 2px solid var(--border-gold);
-  background: linear-gradient(180deg, #3d3220, #2a2218);
-  color: var(--border-gold);
-  cursor: pointer;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
-  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-}
-
-.profile-avatar-frame-btn:hover {
-  border-color: var(--border-gold);
-  box-shadow: 0 0 18px var(--glow-gold);
-}
-
-.profile-avatar-frame-btn:active {
-  transform: scale(0.96);
-}
-
-.profile-avatar-frame-btn:focus-visible {
-  outline: 2px solid var(--border-gold);
-  outline-offset: 3px;
-}
-
-.profile-avatar-frame-btn[aria-expanded="true"] {
-  background: linear-gradient(180deg, #4a3d28, #352a18);
-  box-shadow: 0 0 22px var(--glow-gold);
+  .profile-avatar-bookmark .profile-avatar-edit-btn,
+  .profile-avatar-bookmark .profile-avatar-upload-btn,
+  .profile-avatar-bookmark .profile-avatar-frame-btn {
+    transition: none;
+  }
 }
 
 .profile-avatar-menu,
 .profile-frame-menu {
   position: absolute;
-  top: calc(100% + 8px);
-  /* левый край меню — от правого края колонки с кнопками, дальше только вправо */
-  left: 100%;
+  top: 50%;
+  left: calc(100% + 10px);
   right: auto;
-  transform: none;
+  transform: translateY(-50%);
   z-index: 80;
   width: max-content;
   max-width: min(92vw, 300px);
@@ -1721,7 +1730,7 @@ label.admin-filter input {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 0;
-  margin: 0 0 0 18px;
+  margin: 0;
   list-style: none;
   border-radius: 12px;
   border: 1px solid var(--border-gold-dim);
@@ -1812,9 +1821,13 @@ label.admin-filter input {
   outline-offset: 2px;
 }
 
-/* Под линией: «На главную» + «Выйти» слева, «Забыл пароль» справа на одной линии, под колонкой «Обновить пароль» */
+/* Под контентом кабинета: слева «На главную» / «Выйти», справа «Сменить имя» / «Изменить пароль» */
 .profile-footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: center;
+  gap: 1rem 1.5rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-gold-dim);
@@ -1827,18 +1840,24 @@ label.admin-filter input {
   gap: 0.75rem;
 }
 
-.profile-footer-forgot-wrap {
-  flex: 0 0 auto;
-  width: min(100%, 400px);
-  margin-left: auto;
-  padding-right: 1rem;
-  box-sizing: border-box;
+.profile-footer-actions-trailing {
   display: flex;
-  justify-content: flex-end;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 @media (max-width: 520px) {
+  .profile-footer-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .profile-footer-actions-trailing {
+    justify-content: flex-start;
+  }
+
   .profile-detail-row {
     grid-template-columns: 1fr;
     gap: 0.25rem;
@@ -1846,11 +1865,12 @@ label.admin-filter input {
 
   .profile-avatar-menu,
   .profile-frame-menu {
-    left: 100%;
+    left: calc(100% + 8px);
     right: auto;
-    margin-left: 10px;
-    transform: none;
-    max-width: min(calc(100vw - 5rem), 300px);
+    margin-left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    max-width: min(calc(100vw - 2rem), 300px);
   }
 
   .profile-avatar-menu-grid,
@@ -1874,7 +1894,7 @@ label.admin-filter input {
   }
 }
 
-/* Профиль: ряд — аватар | имя и теги | «Сменить имя»; линия; ниже справа — смена пароля */
+/* Профиль: шапка — аватар | имя и теги; снизу футер с кнопками */
 .profile-layout {
   display: flex;
   flex-direction: column;
@@ -1888,12 +1908,6 @@ label.admin-filter input {
   gap: 1.25rem 1.75rem;
 }
 
-.profile-top-aside {
-  flex: 0 0 auto;
-  margin-left: auto;
-  align-self: flex-start;
-}
-
 .profile-top-divider {
   margin-top: 1.1rem;
   border: 0;
@@ -1901,88 +1915,23 @@ label.admin-filter input {
   height: 0;
 }
 
-.profile-bottom {
-  display: flex;
-  justify-content: flex-end;
+/* Резерв высоты под бывший блок «Смена пароля», чтобы панель кабинета не сжималась */
+.profile-cabinet-spacer {
+  margin-top: 1.15rem;
+  min-height: 17.5rem;
   width: 100%;
-  padding-top: 1.15rem;
+  max-width: 420px;
+  margin-left: auto;
+  flex-shrink: 0;
   box-sizing: border-box;
-}
-
-.profile-bottom-auth {
-  flex: 0 1 420px;
-  width: 100%;
-  max-width: min(100%, 420px);
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-}
-
-.profile-bottom-auth > .profile-password-section {
-  margin-top: 0;
-  padding-top: 0;
-  border-top: none;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-/* Под полями: вправо, но не дальше правого края инпутов (у них max-width: 400px) */
-.profile-bottom-auth .profile-password-submit {
-  justify-content: flex-end;
-  width: 100%;
-  max-width: 400px;
-  box-sizing: border-box;
-  /* чуть больше воздуха, как между блоками .form-group (у них margin-bottom: 1rem) */
-  margin-top: 2rem;
-}
-
-.profile-bottom-auth .profile-password-submit .btn {
-  max-width: 100%;
-}
-
-/* «Сменить имя» в шапке профиля */
-.profile-account-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  margin: 0;
-  padding: 0;
-  border: none;
+  pointer-events: none;
 }
 
 @media (max-width: 720px) {
-  .profile-top-aside {
+  .profile-cabinet-spacer {
     margin-left: 0;
-    width: 100%;
-  }
-
-  .profile-account-toolbar {
-    justify-content: flex-start;
-  }
-
-  .profile-bottom {
-    justify-content: flex-start;
-  }
-
-  .profile-bottom-auth {
     max-width: 100%;
   }
-}
-
-.profile-password-heading {
-  margin: 0 0 0.75rem;
-  font-size: 1rem;
-  letter-spacing: 0.06em;
-  color: var(--border-gold);
-}
-
-#profile-inline-password-msg {
-  margin-bottom: 0.75rem;
-  min-height: 0;
 }
 
 /* Модальные окна профиля */
