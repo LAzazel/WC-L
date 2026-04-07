@@ -4,6 +4,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.gzip import GZipMiddleware
 
 from app.api.router import api_router
 from app.core.config import get_settings
@@ -16,6 +17,9 @@ frontend_index_file = frontend_dir / "index.html"
 
 
 app = FastAPI(title=settings.app_name, debug=settings.debug)
+
+# Сжатие HTML/JSON/CSS/JS/SVG — меньше трафика при той же скорости сети.
+app.add_middleware(GZipMiddleware, minimum_size=800)
 
 
 @app.middleware("http")

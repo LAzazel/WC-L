@@ -61,8 +61,16 @@
 
   /** Путь относительно каталога static (например img/coin-spin.gif) — и с :8000, и с Live Server. */
   function localStaticUrl(pathWithinStatic) {
-    const p = String(pathWithinStatic || "").replace(/^\/+/, "");
-    if (!p) return "";
+    const raw = String(pathWithinStatic || "").replace(/^\/+/, "");
+    if (!raw) return "";
+    const qIdx = raw.indexOf("?");
+    const pathPart = qIdx >= 0 ? raw.slice(0, qIdx) : raw;
+    const query = qIdx >= 0 ? raw.slice(qIdx) : "";
+    const encoded = pathPart
+      .split("/")
+      .map((seg) => encodeURIComponent(seg))
+      .join("/");
+    const p = encoded + query;
     const o = apiOrigin();
     if (o) return `${o}/static/${p}`;
     if (typeof location !== "undefined" && location.protocol !== "file:") {
@@ -96,7 +104,7 @@
     dot.className = "api-status api-status-unknown";
     txt.textContent = "Проверка API…";
     try {
-      const res = await fetch(healthUrl(), { method: "GET" });
+      const res = await fetch(healthUrl(), { method: "GET", cache: "no-store" });
       const data = await res.json().catch(() => ({}));
       if (!res.ok || data.status !== "ok") throw new Error("bad");
       dot.className = "api-status api-status-ok";
@@ -367,7 +375,7 @@
       label: "3lEP",
       asset: "img/3lEP.gif",
     },
-    { id: "pack_4p8p", headName: null, label: "4P8P", asset: "img/4P8P-slow.gif", combined: true },
+    { id: "pack_4p8p", headName: null, label: "4P8P", asset: "img/4P8P-slow.gif?cb=3", combined: true },
     {
       id: "heart_pair",
       headName: null,
@@ -391,6 +399,13 @@
   const DEFAULT_MC_AVATAR_VARIANT = "coin_spin";
   const MC_AVATAR_STORAGE_KEY = "wc_l_mc_avatar_variant_by_user";
   const WC_L_CUSTOM_AVATAR_KEY = "wc_l_custom_avatar_data_by_user";
+  /** Декоративная рамка поверх аватарки (PNG поверх круга). */
+  const PROFILE_FRAME_VARIANTS = Object.freeze([
+    { id: "none", label: "Без рамки", asset: null },
+    { id: "pngwing_1", label: "Рамка 1", asset: "img/pngwing.com (1).png" },
+  ]);
+  const DEFAULT_PROFILE_FRAME = "none";
+  const PROFILE_FRAME_STORAGE_KEY = "wc_l_profile_frame_by_user";
   /** Превью плитки «с устройства», пока файл не выбран. */
   const CUSTOM_AVATAR_MENU_PLACEHOLDER_SRC =
     "data:image/svg+xml," +
@@ -400,10 +415,102 @@
 
   let _mcAvatarMapCache = null;
   let _customAvatarMapCache = null;
+  let _profileFrameMapCache = null;
   window.addEventListener("storage", (e) => {
     if (e.key === MC_AVATAR_STORAGE_KEY) _mcAvatarMapCache = null;
     if (e.key === WC_L_CUSTOM_AVATAR_KEY) _customAvatarMapCache = null;
+    if (e.key === PROFILE_FRAME_STORAGE_KEY) _profileFrameMapCache = null;
   });
+
+  function readProfileFrameMap() {
+    if (_profileFrameMapCache) return _profileFrameMapCache;
+    try {
+      const raw = localStorage.getItem(PROFILE_FRAME_STORAGE_KEY);
+      _profileFrameMapCache = raw ? JSON.parse(raw) : {};
+      if (!_profileFrameMapCache || typeof _profileFrameMapCache !== "object") _profileFrameMapCache = {};
+    } catch {
+      _profileFrameMapCache = {};
+    }
+    return _profileFrameMapCache;
+  }
+
+  function writeProfileFrameMap(map) {
+    localStorage.setItem(PROFILE_FRAME_STORAGE_KEY, JSON.stringify(map));
+    _profileFrameMapCache = map;
+  }
+
+  function getProfileFrameDef(frameId) {
+    for (let i = 0; i < PROFILE_FRAME_VARIANTS.length; i += 1) {
+      if (PROFILE_FRAME_VARIANTS[i].id === frameId) return PROFILE_FRAME_VARIANTS[i];
+    }
+    return PROFILE_FRAME_VARIANTS[0];
+  }
+
+  function getStoredProfileFrame(userId) {
+    const v = readProfileFrameMap()[String(userId)];
+    if (v) {
+      for (let i = 0; i < PROFILE_FRAME_VARIANTS.length; i += 1) {
+        if (PROFILE_FRAME_VARIANTS[i].id === v) return v;
+      }
+    }
+    return DEFAULT_PROFILE_FRAME;
+  }
+
+  function setStoredProfileFrame(userId, frameId) {
+    let ok = false;
+    for (let i = 0; i < PROFILE_FRAME_VARIANTS.length; i += 1) {
+      if (PROFILE_FRAME_VARIANTS[i].id === frameId) {
+        ok = true;
+        break;
+      }
+    }
+    if (!ok) return;
+    const map = { ...readProfileFrameMap() };
+    map[String(userId)] = frameId;
+    writeProfileFrameMap(map);
+  }
+
+  function applyProfileFrameOverlay(root, userId) {
+    const deco = root.querySelector(".profile-avatar-frame-deco");
+    if (!deco) return;
+    const fid = getStoredProfileFrame(userId);
+    const def = getProfileFrameDef(fid);
+    if (!def.asset) {
+      deco.classList.add("is-hidden");
+      deco.removeAttribute("src");
+      return;
+    }
+    deco.classList.remove("is-hidden");
+    deco.src = localStaticUrl(def.asset);
+  }
+
+  function renderProfileFrameMenuHtml(currentFrameId) {
+    const tiles = PROFILE_FRAME_VARIANTS.map((v) => {
+      const sel = v.id === currentFrameId ? " is-selected" : "";
+      const title = escapeHtml(v.label);
+      let inner = "";
+      if (v.id === "none") {
+        inner = '<span class="profile-frame-tile-none" aria-hidden="true">—</span>';
+      } else if (v.asset) {
+        const src = localStaticUrl(v.asset);
+        inner = `<img src="${src}" alt="" width="32" height="32" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+      }
+      return `<button type="button" class="profile-frame-tile${sel}" role="menuitem" data-profile-frame="${v.id}" title="${title}" aria-label="${title}">${inner}</button>`;
+    }).join("");
+    return `<div class="profile-frame-menu hidden" id="profile-frame-menu" role="menu" aria-label="Рамка аватара" aria-hidden="true">
+      <div class="profile-frame-menu-grid" role="group">${tiles}</div>
+    </div>`;
+  }
+
+  function closeProfileFrameMenu() {
+    const menu = document.getElementById("profile-frame-menu");
+    const btn = document.getElementById("profile-frame-edit-btn");
+    if (menu) {
+      menu.classList.add("hidden");
+      menu.setAttribute("aria-hidden", "true");
+    }
+    if (btn) btn.setAttribute("aria-expanded", "false");
+  }
   function readMcAvatarMap() {
     if (_mcAvatarMapCache) return _mcAvatarMapCache;
     try {
@@ -733,11 +840,29 @@
       if (!menu) return;
       const open = menu.classList.contains("hidden");
       if (open) {
+        closeProfileFrameMenu();
         menu.classList.remove("hidden");
         menu.setAttribute("aria-hidden", "false");
         editBtn.setAttribute("aria-expanded", "true");
       } else {
         closeMcAvatarMenu();
+      }
+      return;
+    }
+
+    const frameBtn = e.target.closest("#profile-frame-edit-btn");
+    if (frameBtn && document.getElementById("profile-content")?.contains(frameBtn)) {
+      e.stopPropagation();
+      const menu = document.getElementById("profile-frame-menu");
+      if (!menu) return;
+      const willOpen = menu.classList.contains("hidden");
+      if (willOpen) {
+        closeMcAvatarMenu();
+        menu.classList.remove("hidden");
+        menu.setAttribute("aria-hidden", "false");
+        frameBtn.setAttribute("aria-expanded", "true");
+      } else {
+        closeProfileFrameMenu();
       }
       return;
     }
@@ -762,17 +887,36 @@
       });
       closeMcAvatarMenu();
     }
+
+    const frameItem = e.target.closest("[data-profile-frame]");
+    const frameRoot = document.getElementById("profile-content");
+    if (frameItem && frameRoot?.contains(frameItem)) {
+      e.stopPropagation();
+      const userIdStr = frameRoot.dataset.profileUserId;
+      if (userIdStr === undefined) return;
+      const frameId = frameItem.getAttribute("data-profile-frame");
+      if (!frameId || !PROFILE_FRAME_VARIANTS.some((v) => v.id === frameId)) return;
+      const uid = Number(userIdStr, 10);
+      setStoredProfileFrame(uid, frameId);
+      applyProfileFrameOverlay(frameRoot, uid);
+      frameRoot.querySelectorAll("[data-profile-frame]").forEach((el) => {
+        el.classList.toggle("is-selected", el.getAttribute("data-profile-frame") === frameId);
+      });
+      closeProfileFrameMenu();
+    }
   });
 
   document.addEventListener("click", (e) => {
-    const menu = document.getElementById("profile-avatar-menu");
-    if (!menu || menu.classList.contains("hidden")) return;
     if (e.target.closest(".profile-avatar-shell")) return;
     closeMcAvatarMenu();
+    closeProfileFrameMenu();
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeMcAvatarMenu();
+    if (e.key === "Escape") {
+      closeMcAvatarMenu();
+      closeProfileFrameMenu();
+    }
   });
 
   document.getElementById("profile-avatar-file-input")?.addEventListener("change", async (e) => {
@@ -856,6 +1000,7 @@
         return;
       }
       const variantId = getStoredMcVariant(me.id);
+      const profileFrameId = getStoredProfileFrame(me.id);
       const hue = profileHue(me.username);
       const initials = escapeHtml(profileInitials(me.username));
       const avatarChain = avatarUrlChain(me.username, variantId, MC_HEAD_MAIN, me.id);
@@ -881,11 +1026,14 @@
               <div class="profile-avatar-shell">
                 <div class="profile-avatar-row">
                   <div class="profile-avatar-display">
-                    <div class="profile-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue: ${hue}">
-                      <div class="profile-avatar-inner">
-                        <img class="profile-avatar-img" src="${avatarUrl}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
-                        <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
+                    <div class="profile-avatar-stack">
+                      <div class="profile-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue: ${hue}">
+                        <div class="profile-avatar-inner">
+                          <img class="profile-avatar-img" src="${avatarUrl}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
+                          <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
+                        </div>
                       </div>
+                      <img class="profile-avatar-frame-deco is-hidden" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                     </div>
                   </div>
                   <div class="profile-avatar-controls">
@@ -893,7 +1041,11 @@
                     <button type="button" class="profile-avatar-upload-btn" id="profile-avatar-upload-btn" title="Загрузить аватар с устройства" aria-label="Загрузить аватар с устройства">
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5l6.74-6.74z"/><line x1="16" y1="8" x2="2" y2="22"/></svg>
                     </button>
+                    <button type="button" class="profile-avatar-frame-btn" id="profile-frame-edit-btn" aria-expanded="false" aria-controls="profile-frame-menu" aria-haspopup="true" title="Рамка аватара" aria-label="Выбор рамки">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><rect x="7" y="7" width="10" height="10" rx="1" ry="1"/></svg>
+                    </button>
                     ${renderMcAvatarMenuHtml(me.username, variantId, me.id)}
+                    ${renderProfileFrameMenuHtml(profileFrameId)}
                   </div>
                 </div>
               </div>
@@ -966,6 +1118,7 @@
       box.dataset.profileUsername = me.username;
       bindProfileAvatarImage(box, me.username, variantId);
       bindMcAvatarMenuTiles(box);
+      applyProfileFrameOverlay(box, me.id);
     } catch (err) {
       msg.classList.add("flash-error");
       msg.textContent = err.message;
@@ -1265,7 +1418,15 @@
     layer.setAttribute("aria-hidden", "true");
     document.body.prepend(layer);
 
-    const count = window.matchMedia("(max-width: 640px)").matches ? 7 : 13;
+    const conn = typeof navigator !== "undefined" ? navigator.connection : undefined;
+    const saveData = conn && conn.saveData;
+    const lowCpu =
+      typeof navigator !== "undefined" &&
+      navigator.hardwareConcurrency != null &&
+      navigator.hardwareConcurrency > 0 &&
+      navigator.hardwareConcurrency <= 4;
+    let count = window.matchMedia("(max-width: 640px)").matches ? 7 : 11;
+    if (saveData || lowCpu) count = Math.min(count, 6);
     const particles = [];
     let mx = 0;
     let my = 0;
@@ -1308,11 +1469,19 @@
       return el.getBoundingClientRect().top + window.scrollY;
     }
 
+    let pmRaf = 0;
+    let pmLast = null;
     document.addEventListener(
       "pointermove",
       (e) => {
-        mx = e.clientX + window.scrollX;
-        my = e.clientY + window.scrollY;
+        pmLast = e;
+        if (pmRaf) return;
+        pmRaf = requestAnimationFrame(() => {
+          pmRaf = 0;
+          if (!pmLast) return;
+          mx = pmLast.clientX + window.scrollX;
+          my = pmLast.clientY + window.scrollY;
+        });
       },
       { passive: true }
     );
@@ -1571,7 +1740,8 @@
   updateAuthNav();
   showView(readStoredView());
   checkApiStatus();
-  setInterval(checkApiStatus, 45000);
+  /* Реже опрос health — меньше фоновых запросов при открытой вкладке. */
+  setInterval(checkApiStatus, 120000);
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") checkApiStatus();
   });

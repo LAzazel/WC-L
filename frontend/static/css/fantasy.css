@@ -1165,8 +1165,34 @@ label.admin-filter input {
   margin-top: 1.25rem;
 }
 
+.profile-avatar-stack {
+  position: relative;
+  display: inline-block;
+  line-height: 0;
+  vertical-align: top;
+}
+
+/* Рамка PNG — поверх круга аватарки (кольцо/ободок на изображении) */
+.profile-avatar-frame-deco {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 138%;
+  height: 138%;
+  max-width: none;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.profile-avatar-frame-deco.is-hidden {
+  display: none !important;
+}
+
 .profile-avatar-frame {
   position: relative;
+  z-index: 1;
   flex-shrink: 0;
   width: 132px;
   height: 132px;
@@ -1553,7 +1579,7 @@ label.admin-filter input {
   display: flex;
   flex-direction: row;
   align-items: flex-start;
-  gap: 0.85rem;
+  gap: 1.65rem;
 }
 
 .profile-avatar-display {
@@ -1644,13 +1670,49 @@ label.admin-filter input {
   outline-offset: 3px;
 }
 
-.profile-avatar-menu {
+.profile-avatar-frame-btn {
+  width: 44px;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--border-gold);
+  background: linear-gradient(180deg, #3d3220, #2a2218);
+  color: var(--border-gold);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.profile-avatar-frame-btn:hover {
+  border-color: var(--border-gold);
+  box-shadow: 0 0 18px var(--glow-gold);
+}
+
+.profile-avatar-frame-btn:active {
+  transform: scale(0.96);
+}
+
+.profile-avatar-frame-btn:focus-visible {
+  outline: 2px solid var(--border-gold);
+  outline-offset: 3px;
+}
+
+.profile-avatar-frame-btn[aria-expanded="true"] {
+  background: linear-gradient(180deg, #4a3d28, #352a18);
+  box-shadow: 0 0 22px var(--glow-gold);
+}
+
+.profile-avatar-menu,
+.profile-frame-menu {
   position: absolute;
   top: calc(100% + 8px);
-  /* левый край меню — от правого края колонки с карандашом, дальше только вправо */
+  /* левый край меню — от правого края колонки с кнопками, дальше только вправо */
   left: 100%;
   right: auto;
-  margin-left: 14px;
   transform: none;
   z-index: 80;
   width: max-content;
@@ -1659,7 +1721,7 @@ label.admin-filter input {
   overflow-x: hidden;
   overflow-y: auto;
   padding: 0;
-  margin: 0;
+  margin: 0 0 0 18px;
   list-style: none;
   border-radius: 12px;
   border: 1px solid var(--border-gold-dim);
@@ -1669,18 +1731,21 @@ label.admin-filter input {
     0 0 0 1px rgba(201, 162, 39, 0.15);
 }
 
-.profile-avatar-menu.hidden {
+.profile-avatar-menu.hidden,
+.profile-frame-menu.hidden {
   display: none !important;
 }
 
-.profile-avatar-menu-grid {
+.profile-avatar-menu-grid,
+.profile-frame-menu-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 32px));
   gap: 0.4rem;
   padding: 0.5rem;
 }
 
-.profile-avatar-tile {
+.profile-avatar-tile,
+.profile-frame-tile {
   margin: 0;
   padding: 0;
   width: 32px;
@@ -1704,21 +1769,45 @@ label.admin-filter input {
   image-rendering: crisp-edges;
 }
 
-.profile-avatar-tile:hover {
+.profile-frame-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  image-rendering: auto;
+}
+
+.profile-frame-tile-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  font-size: 1.1rem;
+  color: var(--text-muted);
+  font-family: var(--font-heading);
+}
+
+.profile-avatar-tile:hover,
+.profile-frame-tile:hover {
   border-color: var(--border-gold);
   box-shadow: 0 0 12px var(--glow-gold);
 }
 
-.profile-avatar-tile.is-selected {
+.profile-avatar-tile.is-selected,
+.profile-frame-tile.is-selected {
   border-color: var(--border-gold);
   box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.45);
 }
 
-.profile-avatar-tile:active {
+.profile-avatar-tile:active,
+.profile-frame-tile:active {
   transform: scale(0.94);
 }
 
-.profile-avatar-tile:focus-visible {
+.profile-avatar-tile:focus-visible,
+.profile-frame-tile:focus-visible {
   outline: 2px solid var(--border-gold);
   outline-offset: 2px;
 }
@@ -1755,7 +1844,8 @@ label.admin-filter input {
     gap: 0.25rem;
   }
 
-  .profile-avatar-menu {
+  .profile-avatar-menu,
+  .profile-frame-menu {
     left: 100%;
     right: auto;
     margin-left: 10px;
@@ -1763,7 +1853,8 @@ label.admin-filter input {
     max-width: min(calc(100vw - 5rem), 300px);
   }
 
-  .profile-avatar-menu-grid {
+  .profile-avatar-menu-grid,
+  .profile-frame-menu-grid {
     grid-template-columns: repeat(3, minmax(0, 32px));
   }
 }
