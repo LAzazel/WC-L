@@ -11,8 +11,16 @@
     <link
       href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap"
       rel="stylesheet"
+      media="print"
+      onload="this.media='all'"
     />
-    <link rel="stylesheet" href="static/css/fantasy.css?v=7" />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
+    <link rel="stylesheet" href="static/css/fantasy.css?v=46" />
   </head>
   <body data-view="home">
     <header class="site-header">
@@ -82,9 +90,6 @@
         <div id="nav-user" class="hidden nav-user-btns">
           <span id="nav-user-label" class="brand-tagline" style="align-self: center"></span>
           <button type="button" class="btn btn-ghost btn-small" data-nav="profile">Личный кабинет</button>
-          <button type="button" class="btn btn-ghost btn-small hidden" id="nav-admin" data-nav="admin">
-            Админ
-          </button>
           <button type="button" class="btn btn-danger btn-small" id="btn-logout">Выход</button>
         </div>
       </div>
@@ -284,12 +289,16 @@
       <section id="view-profile" class="view">
         <div class="panel panel-profile">
           <h2 class="profile-page-title">Личный кабинет</h2>
-          <p class="profile-page-sub">Ваш герой в хрониках WC-L</p>
           <div id="profile-message" class="flash" role="status"></div>
           <div id="profile-content"></div>
           <div class="profile-footer-actions form-actions">
-            <button type="button" class="btn" data-nav="home">На главную</button>
-            <button type="button" class="btn btn-ghost" id="btn-logout-2">Выйти</button>
+            <div class="profile-footer-actions-leading">
+              <button type="button" class="btn" data-nav="home">На главную</button>
+              <button type="button" class="btn btn-ghost" id="btn-logout-2">Выйти</button>
+            </div>
+            <div class="profile-footer-forgot-wrap">
+              <button type="button" class="btn btn-ghost" id="btn-profile-forgot-password">Забыл пароль</button>
+            </div>
           </div>
         </div>
       </section>
@@ -347,6 +356,60 @@
       </footer>
     </div>
 
-    <script src="static/js/app.js?v=4"></script>
+    <div id="profile-modal-overlay" class="profile-modal-overlay hidden" aria-hidden="true">
+      <div class="profile-modal-scrim" id="profile-modal-scrim" aria-hidden="true"></div>
+      <div
+        id="profile-modal-change-name"
+        class="profile-modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-change-title"
+      >
+        <h3 id="profile-modal-change-title" class="profile-modal-title">Сменить имя героя</h3>
+        <p class="profile-modal-hint">
+          Новое имя используется для входа и отображается на сайте (3–50 символов).
+        </p>
+        <div id="profile-modal-change-msg" class="flash" role="status"></div>
+        <form id="form-profile-change-username">
+          <div class="form-group">
+            <label for="input-profile-username">Имя героя</label>
+            <input
+              id="input-profile-username"
+              name="username"
+              type="text"
+              required
+              minlength="3"
+              maxlength="50"
+              autocomplete="username"
+            />
+          </div>
+          <div class="form-actions profile-modal-actions">
+            <button type="button" class="btn" id="btn-profile-modal-cancel">Отмена</button>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+          </div>
+        </form>
+      </div>
+      <div id="profile-modal-forgot" class="profile-modal hidden" role="dialog" aria-modal="true">
+        <h3 class="profile-modal-title">Забыли пароль?</h3>
+        <p class="profile-modal-hint">
+          Сброс пароля по письму на email в этом прототипе не подключён. Обратитесь к администрации сервера или
+          загляните в раздел «Как зайти», если там указаны контакты поддержки.
+        </p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="btn-profile-forgot-close">Понятно</button>
+        </div>
+      </div>
+    </div>
+
+    <input
+      type="file"
+      id="profile-avatar-file-input"
+      class="hidden"
+      accept="image/*"
+      tabindex="-1"
+      aria-hidden="true"
+    />
+
+    <script src="static/js/app.js?v=35" defer></script>
   </body>
 </html>

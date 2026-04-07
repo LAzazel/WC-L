@@ -1129,39 +1129,26 @@ label.admin-filter input {
   animation: fx-ip-glow 4.5s ease-in-out infinite;
 }
 
-/* ——— Личный кабинет ——— */
+/* ——— Личный кабинет — одна рамка (.panel), без вложенной «коробки» у .profile-card ——— */
 .panel-profile {
   overflow: visible;
 }
 
 .profile-page-title {
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.75rem;
 }
 
-.profile-page-sub {
-  margin: 0 0 1.25rem;
-  color: var(--text-muted);
-  font-size: 1.05rem;
-}
-
-.profile-card {
+.panel-profile .profile-card {
   position: relative;
-  border-radius: 12px;
-  border: 1px solid var(--border-gold-dim);
-  background:
-    linear-gradient(145deg, rgba(35, 28, 48, 0.98) 0%, rgba(18, 14, 26, 0.99) 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 12px 40px rgba(0, 0, 0, 0.45);
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
   overflow: visible;
 }
 
-.profile-card::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(201, 162, 39, 0.12), transparent 55%);
-  pointer-events: none;
+.panel-profile .profile-card::before {
+  display: none;
 }
 
 .profile-card-hero {
@@ -1170,8 +1157,12 @@ label.admin-filter input {
   flex-wrap: wrap;
   align-items: center;
   gap: 1.5rem 2rem;
-  padding: 1.75rem 1.75rem 1.5rem;
-  border-bottom: 1px solid var(--border-gold-dim);
+  padding: 0.25rem 0 0;
+  border-bottom: none;
+}
+
+.profile-hero-admin {
+  margin-top: 1.25rem;
 }
 
 .profile-avatar-frame {
@@ -1218,6 +1209,224 @@ label.admin-filter input {
   display: none;
 }
 
+/* Монета: анимированный фон за coin-spin.gif + отступ, чтобы монетка не прилипала к ободку */
+.profile-avatar-frame[data-avatar-variant="coin_spin"] .profile-avatar-inner {
+  background-color: #0a1628;
+  background-image: url("../img/фон монеты.gif");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 14%;
+  box-sizing: border-box;
+}
+
+.profile-avatar-frame[data-avatar-variant="coin_spin"] .profile-avatar-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background-color: transparent;
+  image-rendering: auto;
+}
+
+.profile-avatar-tile[data-mc-variant="coin_spin"] {
+  background-color: #0c1a2e;
+  background-image: url("../img/фон монеты.gif");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.profile-avatar-tile[data-mc-variant="coin_spin"] img {
+  object-fit: contain;
+  object-position: center;
+  padding: 18%;
+  box-sizing: border-box;
+  background-color: transparent;
+  image-rendering: auto;
+}
+
+/* 3lEP — без отдельного фона, крупнее (приближено) */
+.profile-avatar-frame[data-avatar-variant="lep_pair"] .profile-avatar-inner {
+  background: #0d0a12;
+  padding: 5%;
+  box-sizing: border-box;
+}
+
+.profile-avatar-tile[data-mc-variant="lep_pair"] {
+  background: #0d0a12;
+}
+
+.profile-avatar-frame[data-avatar-variant="lep_pair"] .profile-avatar-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  /* сдвиг влево от варианта v44/v45 */
+  object-position: 88% 50%;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: scale(1.14) translateX(14%);
+  transform-origin: 88% 50%;
+}
+
+.profile-avatar-tile[data-mc-variant="lep_pair"] img {
+  object-fit: contain;
+  object-position: 88% 50%;
+  padding: 10%;
+  box-sizing: border-box;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: translateX(12%);
+  transform-origin: 88% 50%;
+}
+
+/* 4P8P — один GIF, крупнее */
+.profile-avatar-frame[data-avatar-variant="pack_4p8p"] .profile-avatar-inner {
+  background: #0d0a12;
+  padding: 3%;
+  box-sizing: border-box;
+}
+
+.profile-avatar-tile[data-mc-variant="pack_4p8p"] {
+  background: #0d0a12;
+}
+
+/* Пара сердце (mxjfiles-heart-22297-slow: чуть медленнее оригинала, без длинных пауз) + фон WBVi */
+.profile-avatar-frame[data-avatar-variant="heart_pair"] .profile-avatar-inner {
+  background-color: #0a1628;
+  background-image: url("../img/WBVi.gif");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 7%;
+  box-sizing: border-box;
+}
+
+.profile-avatar-tile[data-mc-variant="heart_pair"] {
+  background-color: #0a1628;
+  background-image: url("../img/WBVi.gif");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* u_iglgsndacj-cat — один GIF, крупнее */
+.profile-avatar-frame[data-avatar-variant="cat_combo"] .profile-avatar-inner {
+  background: #0d0a12;
+  padding: 4%;
+  box-sizing: border-box;
+}
+
+.profile-avatar-tile[data-mc-variant="cat_combo"] {
+  background: #0d0a12;
+}
+
+/* Пара pikura-diamond + фон HDso, алмаз крупнее */
+.profile-avatar-frame[data-avatar-variant="diamond_pair"] .profile-avatar-inner {
+  background-color: #0a1628;
+  background-image: url("../img/HDso.gif");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 5%;
+  box-sizing: border-box;
+}
+
+.profile-avatar-tile[data-mc-variant="diamond_pair"] {
+  background-color: #0a1628;
+  background-image: url("../img/HDso.gif");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.profile-avatar-frame[data-avatar-variant="heart_pair"] .profile-avatar-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: scale(1.12);
+  transform-origin: center center;
+}
+
+.profile-avatar-frame[data-avatar-variant="diamond_pair"] .profile-avatar-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: scale(1.24);
+  transform-origin: center center;
+}
+
+.profile-avatar-frame[data-avatar-variant="pack_4p8p"] .profile-avatar-inner img,
+.profile-avatar-frame[data-avatar-variant="cat_combo"] .profile-avatar-inner img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  background-color: transparent;
+  image-rendering: auto;
+}
+
+.profile-avatar-frame[data-avatar-variant="pack_4p8p"] .profile-avatar-inner img {
+  transform: scale(1.16);
+  transform-origin: center center;
+}
+
+.profile-avatar-frame[data-avatar-variant="cat_combo"] .profile-avatar-inner img {
+  transform: scale(1.18);
+  transform-origin: center center;
+}
+
+.profile-avatar-tile[data-mc-variant="heart_pair"] img {
+  object-fit: contain;
+  object-position: center;
+  padding: 14%;
+  box-sizing: border-box;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: scale(1.06);
+  transform-origin: center center;
+}
+
+.profile-avatar-tile[data-mc-variant="diamond_pair"] img {
+  object-fit: contain;
+  object-position: center;
+  padding: 8%;
+  box-sizing: border-box;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: scale(1.1);
+  transform-origin: center center;
+}
+
+.profile-avatar-tile[data-mc-variant="pack_4p8p"] img {
+  object-fit: contain;
+  object-position: center;
+  padding: 8%;
+  box-sizing: border-box;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: scale(1.05);
+  transform-origin: center center;
+}
+
+/* Кот: только в меню — чуть крупнее превью (большой аватар не трогаем) */
+.profile-avatar-tile[data-mc-variant="cat_combo"] img {
+  object-fit: contain;
+  object-position: center;
+  padding: 4%;
+  box-sizing: border-box;
+  background-color: transparent;
+  image-rendering: auto;
+  transform: scale(1.16);
+  transform-origin: center center;
+}
+
 .profile-avatar-fallback {
   display: none;
   width: 100%;
@@ -1237,9 +1446,10 @@ label.admin-filter input {
   display: flex;
 }
 
-.profile-hero-text {
-  flex: 1;
-  min-width: 200px;
+.profile-hero-text,
+.profile-top-main {
+  flex: 1 1 auto;
+  min-width: min(100%, 200px);
 }
 
 .profile-hero-name {
@@ -1247,15 +1457,8 @@ label.admin-filter input {
   font-weight: 700;
   letter-spacing: 0.12em;
   color: var(--border-gold);
-  margin: 0 0 0.35rem;
+  margin: 0 0 0.65rem;
   text-shadow: 0 0 24px var(--glow-gold);
-}
-
-.profile-hero-id {
-  margin: 0 0 0.75rem;
-  font-size: 0.9rem;
-  color: var(--text-muted);
-  letter-spacing: 0.08em;
 }
 
 .profile-hero-badges {
@@ -1362,6 +1565,10 @@ label.admin-filter input {
   flex-shrink: 0;
   align-self: flex-start;
   padding-top: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
   min-height: 44px;
   min-width: 44px;
   /* якорь для меню справа от кнопки — не перекрывает аватар */
@@ -1406,18 +1613,35 @@ label.admin-filter input {
   box-shadow: 0 0 22px var(--glow-gold);
 }
 
-.profile-avatar-hint {
-  font-size: 0.78rem;
-  color: var(--text-muted);
-  letter-spacing: 0.03em;
-  line-height: 1.35;
+.profile-avatar-upload-btn {
+  width: 44px;
+  height: 44px;
   margin: 0;
-  max-width: 220px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 2px solid var(--border-gold);
+  background: linear-gradient(180deg, #3d3220, #2a2218);
+  color: var(--border-gold);
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
 }
 
-.profile-avatar-hint strong {
-  color: var(--border-gold);
-  font-weight: 600;
+.profile-avatar-upload-btn:hover {
+  border-color: var(--border-gold);
+  box-shadow: 0 0 18px var(--glow-gold);
+}
+
+.profile-avatar-upload-btn:active {
+  transform: scale(0.96);
+}
+
+.profile-avatar-upload-btn:focus-visible {
+  outline: 2px solid var(--border-gold);
+  outline-offset: 3px;
 }
 
 .profile-avatar-menu {
@@ -1499,10 +1723,30 @@ label.admin-filter input {
   outline-offset: 2px;
 }
 
+/* Под линией: «На главную» + «Выйти» слева, «Забыл пароль» справа на одной линии, под колонкой «Обновить пароль» */
 .profile-footer-actions {
+  align-items: center;
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-gold-dim);
+}
+
+.profile-footer-actions-leading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.profile-footer-forgot-wrap {
+  flex: 0 0 auto;
+  width: min(100%, 400px);
+  margin-left: auto;
+  padding-right: 1rem;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 @media (max-width: 520px) {
@@ -1537,4 +1781,180 @@ label.admin-filter input {
   .nav-auth {
     justify-content: center;
   }
+}
+
+/* Профиль: ряд — аватар | имя и теги | «Сменить имя»; линия; ниже справа — смена пароля */
+.profile-layout {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.profile-top-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem 1.75rem;
+}
+
+.profile-top-aside {
+  flex: 0 0 auto;
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.profile-top-divider {
+  margin-top: 1.1rem;
+  border: 0;
+  border-top: 1px solid var(--border-gold-dim);
+  height: 0;
+}
+
+.profile-bottom {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  padding-top: 1.15rem;
+  box-sizing: border-box;
+}
+
+.profile-bottom-auth {
+  flex: 0 1 420px;
+  width: 100%;
+  max-width: min(100%, 420px);
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.profile-bottom-auth > .profile-password-section {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+/* Под полями: вправо, но не дальше правого края инпутов (у них max-width: 400px) */
+.profile-bottom-auth .profile-password-submit {
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 400px;
+  box-sizing: border-box;
+  /* чуть больше воздуха, как между блоками .form-group (у них margin-bottom: 1rem) */
+  margin-top: 2rem;
+}
+
+.profile-bottom-auth .profile-password-submit .btn {
+  max-width: 100%;
+}
+
+/* «Сменить имя» в шапке профиля */
+.profile-account-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+@media (max-width: 720px) {
+  .profile-top-aside {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .profile-account-toolbar {
+    justify-content: flex-start;
+  }
+
+  .profile-bottom {
+    justify-content: flex-start;
+  }
+
+  .profile-bottom-auth {
+    max-width: 100%;
+  }
+}
+
+.profile-password-heading {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+  letter-spacing: 0.06em;
+  color: var(--border-gold);
+}
+
+#profile-inline-password-msg {
+  margin-bottom: 0.75rem;
+  min-height: 0;
+}
+
+/* Модальные окна профиля */
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.profile-modal-overlay.hidden {
+  display: none;
+}
+
+.profile-modal-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 6, 12, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.profile-modal {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 420px;
+  padding: 1.5rem 1.65rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-gold-dim);
+  background: linear-gradient(165deg, rgba(38, 30, 52, 0.98) 0%, rgba(16, 13, 24, 0.99) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 24px 48px rgba(0, 0, 0, 0.55);
+}
+
+.profile-modal.hidden {
+  display: none;
+}
+
+.profile-modal-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.2rem;
+  letter-spacing: 0.06em;
+  color: var(--border-gold);
+}
+
+.profile-modal-hint {
+  margin: 0 0 1rem;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.profile-modal-actions {
+  margin-top: 0.25rem;
+  justify-content: flex-end;
+}
+
+#profile-modal-change-msg {
+  margin-bottom: 0.75rem;
+  min-height: 0;
 }

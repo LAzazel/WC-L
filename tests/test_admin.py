@@ -17,7 +17,9 @@ def _login(client: TestClient, username: str, password: str) -> str:
         json={"login": username, "password": password},
     )
     assert response.status_code == 200
-    return response.json()["access_token"]
+    data = response.json()
+    assert data.get("access_token")
+    return data["access_token"]
 
 
 # This test covers the main admin flow: list users, grant/revoke admin, ban/unban, and verify access control.

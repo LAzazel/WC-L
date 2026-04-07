@@ -31,3 +31,13 @@ class Token(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+
+# Payload for changing the password while authenticated.
+class PasswordChange(BaseModel):
+    current_password: str = Field(min_length=8, max_length=128)
+    new_password: str = Field(min_length=8, max_length=128)
+
+
+# Payload for changing the public username (login name) while authenticated.
+class UserSelfUsername(BaseModel):
+    username: str = Field(min_length=3, max_length=50)

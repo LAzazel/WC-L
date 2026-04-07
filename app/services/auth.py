@@ -59,3 +59,29 @@ def build_access_token_for_user(user: User) -> str:
     return create_access_token(subject=str(user.id))
 
 
+def update_own_username(db: Session, user: User, new_username: str) -> User:
+    new_username = new_username.strip()
+    if len(new_username) < 3:
+        raise AuthError("Username must be at least 3 characters")
+    if new_username == user.username:
+        return user
+    if new_username == settings.admin_username:
+        raise AuthError("This username is reserved")
+    taken = db.scalar(select(User).where(User.username == new_username))
+    if taken is not None and taken.id != user.id:
+        raise AuthError("Username already taken")
+    user.username = new_username
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def change_user_password(db: Session, user: User, current_password: str, new_password: str) -> None:
+    if not verify_password(current_password, user.password_hash):
+        raise AuthError("Current password is incorrect")
+    if current_password == new_password:
+        raise AuthError("New password must differ from the current password")
+    user.password_hash = hash_password(new_password)
+    db.commit()
+
+

@@ -1,23 +1,34 @@
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
-from passlib.context import CryptContext
+import bcrypt
+from jose import JWTError, jwt
 
 from app.core.config import get_settings
 
-# Passlib handles secure password hashing and verification for us.
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 settings = get_settings()
+
+
+def _password_bytes(password: str) -> bytes:
+    # Bcrypt only considers the first 72 bytes of the secret (UTF-8), same as passlib did.
+    raw = password.encode("utf-8")
+    return raw if len(raw) <= 72 else raw[:72]
 
 
 def hash_password(password: str) -> str:
     # Always store only the hash, never the plain password.
-    return pwd_context.hash(password)
+    digest = bcrypt.hashpw(_password_bytes(password), bcrypt.gensalt())
+    return digest.decode("ascii")
 
 
 def verify_password(password: str, password_hash: str) -> bool:
     # Compare a plain password to the stored hash in a timing-safe way.
-    return pwd_context.verify(password, password_hash)
+    try:
+        return bcrypt.checkpw(
+            _password_bytes(password),
+            password_hash.encode("ascii"),
+        )
+    except (ValueError, TypeError):
+        return False
 
 
 def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
