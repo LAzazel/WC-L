@@ -1,4 +1,4 @@
-/* WC-L — фэнтези / RPG стилистика для сайта Minecraft-сервера */
+/* WC-L — VCR OSD Mono + fallback для кириллицы. */
 
 /* Montserrat — локально: static/fonts/montserrat/*.ttf */
 @font-face {
@@ -65,6 +65,14 @@
   src: url("../fonts/montserrat/Montserrat-BoldItalic.ttf") format("truetype");
 }
 
+@font-face {
+  font-family: "vcr_osd_mono";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("../fonts/vcr-osd-mono/VCR_OSD_MONO.ttf") format("truetype");
+}
+
 :root {
   --bg-deep: #0d0a12;
   --bg-stone: #1a1520;
@@ -76,8 +84,8 @@
   --accent-red: #8b2942;
   --accent-emerald: #2d6b4e;
   --glow-gold: rgba(201, 162, 39, 0.35);
-  --font-body: "Crimson Text", Georgia, "Times New Roman", serif;
-  --font-heading: "Montserrat", system-ui, -apple-system, sans-serif;
+  --font-body: "vcr_osd_mono", "Crimson Text", Georgia, "Times New Roman", serif;
+  --font-heading: "vcr_osd_mono", "Montserrat", system-ui, -apple-system, sans-serif;
   --fx-gold-dim: rgba(201, 162, 39, 0.22);
   --fx-mystic: rgba(130, 90, 160, 0.18);
 }
@@ -106,27 +114,13 @@ h6 {
   0%,
   100% {
     box-shadow:
-      0 4px 24px rgba(0, 0, 0, 0.5),
+      0 2px 14px rgba(0, 0, 0, 0.45),
       0 0 0 rgba(201, 162, 39, 0);
   }
   50% {
     box-shadow:
-      0 4px 32px rgba(0, 0, 0, 0.55),
-      0 0 28px rgba(201, 162, 39, 0.14);
-  }
-}
-
-@keyframes fx-brand-shine {
-  0%,
-  100% {
-    text-shadow:
-      0 0 10px var(--glow-gold),
-      0 0 22px rgba(201, 162, 39, 0.35);
-  }
-  50% {
-    text-shadow:
-      0 0 18px var(--glow-gold),
-      0 0 36px rgba(201, 162, 39, 0.55);
+      0 2px 18px rgba(0, 0, 0, 0.5),
+      0 0 18px rgba(201, 162, 39, 0.12);
   }
 }
 
@@ -272,8 +266,9 @@ body {
   margin: 0;
   min-height: unset;
   font-family: var(--font-body);
-  font-size: 1.125rem;
-  line-height: 1.55;
+  font-weight: 400;
+  font-size: 1.2rem;
+  line-height: 1.5;
   color: var(--text-parchment);
   background-color: var(--bg-deep);
   background-image:
@@ -427,54 +422,52 @@ a:hover {
   position: sticky;
   top: 0;
   z-index: 100;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
+  gap: 0.4rem 0.75rem;
+  padding: 0.4rem 1rem;
   background: linear-gradient(180deg, rgba(13, 10, 18, 0.98), rgba(20, 16, 28, 0.95));
-  border-bottom: 2px solid var(--border-gold-dim);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5);
+  border-bottom: 1px solid var(--border-gold-dim);
+  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
   animation: fx-header-glow 6s ease-in-out infinite;
 }
 
 .brand {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 2rem;
   cursor: pointer;
   border: none;
   background: none;
   padding: 0;
   color: inherit;
   font: inherit;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
 }
 
-.brand svg {
+/* В потоке 56×56; визуально ×2, якорь справа — высота хедера не растёт. */
+.brand-logo {
   flex-shrink: 0;
-}
-
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  text-align: left;
-}
-
-.brand-name {
-  font-family: var(--font-heading);
-  font-weight: 700;
-  font-size: 1.5rem;
-  letter-spacing: 0.2em;
-  color: var(--border-gold);
-  text-shadow: 0 0 20px var(--glow-gold);
-  animation: fx-brand-shine 5s ease-in-out infinite;
+  width: 56px;
+  height: 56px;
+  margin-left: 3.25rem;
+  object-fit: contain;
+  display: block;
+  transform: scale(2);
+  transform-origin: right center;
+  filter: drop-shadow(0 0 8px rgba(218, 165, 32, 0.45))
+    drop-shadow(0 0 18px rgba(176, 130, 40, 0.28));
 }
 
 .brand-tagline {
-  font-size: 0.75rem;
-  letter-spacing: 0.15em;
+  font-size: 0.65rem;
+  line-height: 1.2;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--text-muted);
 }
@@ -483,15 +476,15 @@ a:hover {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.35rem 0.5rem;
+  gap: 0.2rem 0.35rem;
 }
 
 .main-nav button,
 .main-nav a.nav-link {
-  font-size: 0.8rem;
-  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  padding: 0.5rem 0.75rem;
+  padding: 0.3rem 0.5rem;
   border: 1px solid transparent;
   border-radius: 4px;
   background: transparent;
@@ -524,7 +517,7 @@ a:hover {
 .nav-auth {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.35rem;
   align-items: center;
 }
 
@@ -532,13 +525,14 @@ a:hover {
 #nav-guest {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: 0.35rem;
   align-items: center;
 }
 
 /* ——— Кнопки ——— */
 .btn {
   font-family: var(--font-heading);
+  font-weight: 400;
   font-size: 0.85rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -597,6 +591,11 @@ a:hover {
 .btn-small {
   padding: 0.4rem 0.75rem;
   font-size: 0.7rem;
+}
+
+.site-header .btn-small {
+  padding: 0.28rem 0.55rem;
+  font-size: 0.65rem;
 }
 
 /* ——— Макет страниц ——— */
@@ -685,7 +684,7 @@ main {
 
   body::before,
   .site-header,
-  .brand-name,
+  .brand-logo,
   .main-nav button.is-active,
   .btn-primary::before,
   .panel:not(.ip-box),
@@ -696,6 +695,13 @@ main {
   .ip-box,
   .profile-avatar-frame {
     animation: none !important;
+  }
+
+  .brand-logo {
+    transform: scale(2);
+    transform-origin: right center;
+    filter: drop-shadow(0 0 6px rgba(218, 165, 32, 0.4))
+      drop-shadow(0 0 14px rgba(176, 130, 40, 0.24));
   }
 
   .feature-card:hover {
@@ -1995,6 +2001,11 @@ label.admin-filter input {
 }
 
 #profile-modal-change-msg {
+  margin-bottom: 0.75rem;
+  min-height: 0;
+}
+
+#profile-modal-password-msg {
   margin-bottom: 0.75rem;
   min-height: 0;
 }

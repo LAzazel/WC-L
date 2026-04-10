@@ -21,58 +21,20 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="static/css/fantasy.css?v=69" />
+    <link rel="stylesheet" href="static/css/fantasy.css?v=99" />
   </head>
   <body data-view="home">
     <header class="site-header">
       <button type="button" class="brand" data-go-home aria-label="На главную">
-        <svg width="56" height="56" viewBox="0 0 64 64" aria-hidden="true">
-          <defs>
-            <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color: #3d3530" />
-              <stop offset="100%" style="stop-color: #1a1518" />
-            </linearGradient>
-            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style="stop-color: #e8d48b" />
-              <stop offset="100%" style="stop-color: #8a7028" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M32 4 L54 14 V32 C54 46 44 56 32 60 C20 56 10 46 10 32 V14 Z"
-            fill="url(#shieldGrad)"
-            stroke="#c9a227"
-            stroke-width="2"
-          />
-          <path
-            d="M32 12 C26 22 20 28 16 30 C18 42 24 50 32 54 C40 50 46 42 48 30 C44 28 38 22 32 12 Z"
-            fill="none"
-            stroke="url(#goldGrad)"
-            stroke-width="1.2"
-            opacity="0.7"
-          />
-          <text
-            x="32"
-            y="38"
-            text-anchor="middle"
-            font-family="Crimson Text, Georgia, serif"
-            font-size="14"
-            font-weight="700"
-            fill="#c9a227"
-          >
-            WC-L
-          </text>
-          <path
-            d="M48 8 Q52 4 56 8 Q54 14 50 16 Q48 12 48 8"
-            fill="#4a3038"
-            stroke="#c9a227"
-            stroke-width="0.5"
-          />
-          <circle cx="53" cy="10" r="1.5" fill="#8b2942" />
-        </svg>
-        <span class="brand-text">
-          <span class="brand-name">WC-L</span>
-          <span class="brand-tagline">Царство легенд</span>
-        </span>
+        <img
+          class="brand-logo"
+          src="static/img/wc-l-logo.png"
+          alt=""
+          width="56"
+          height="56"
+          decoding="async"
+          aria-hidden="true"
+        />
       </button>
 
       <nav class="main-nav" aria-label="Разделы">
@@ -119,7 +81,14 @@
                 fill="none"
                 opacity="0.5"
               />
-              <text x="160" y="14" text-anchor="middle" fill="#6b5a2e" font-size="8" font-family="Crimson Text,Georgia,serif">
+              <text
+                x="160"
+                y="14"
+                text-anchor="middle"
+                fill="#6b5a2e"
+                font-size="8"
+                font-family="vcr_osd_mono,Crimson Text,Georgia,serif"
+              >
                 ⚔ ✦ ⚔
               </text>
             </svg>
@@ -392,30 +361,57 @@
         </form>
       </div>
       <div
-        id="profile-modal-password-hint"
+        id="profile-modal-change-password"
         class="profile-modal hidden"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="profile-modal-password-hint-title"
+        aria-labelledby="profile-modal-change-password-title"
       >
-        <h3 id="profile-modal-password-hint-title" class="profile-modal-title">Изменить пароль</h3>
-        <p class="profile-modal-hint">
-          Чтобы изменить пароль, нажмите «Забыл пароль» — откроется подсказка, как восстановить доступ.
-        </p>
-        <div class="form-actions profile-modal-actions">
-          <button type="button" class="btn" id="btn-profile-password-hint-cancel">Закрыть</button>
-          <button type="button" class="btn btn-primary" id="btn-profile-password-hint-to-forgot">Забыл пароль</button>
-        </div>
-      </div>
-      <div id="profile-modal-forgot" class="profile-modal hidden" role="dialog" aria-modal="true">
-        <h3 class="profile-modal-title">Забыли пароль?</h3>
-        <p class="profile-modal-hint">
-          Сброс пароля по письму на email в этом прототипе не подключён. Обратитесь к администрации сервера или
-          загляните в раздел «Как зайти», если там указаны контакты поддержки.
-        </p>
-        <div class="form-actions">
-          <button type="button" class="btn btn-primary" id="btn-profile-forgot-close">Понятно</button>
-        </div>
+        <h3 id="profile-modal-change-password-title" class="profile-modal-title">Изменить пароль</h3>
+        <p class="profile-modal-hint">Введите текущий пароль, затем новый пароль дважды.</p>
+        <div id="profile-modal-password-msg" class="flash" role="status"></div>
+        <form id="form-profile-change-password">
+          <div class="form-group">
+            <label for="input-profile-password-current">Старый пароль</label>
+            <input
+              id="input-profile-password-current"
+              name="current_password"
+              type="password"
+              required
+              minlength="8"
+              maxlength="128"
+              autocomplete="current-password"
+            />
+          </div>
+          <div class="form-group">
+            <label for="input-profile-password-new">Новый пароль</label>
+            <input
+              id="input-profile-password-new"
+              name="new_password"
+              type="password"
+              required
+              minlength="8"
+              maxlength="128"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-group">
+            <label for="input-profile-password-new-2">Повторите новый пароль</label>
+            <input
+              id="input-profile-password-new-2"
+              name="new_password_confirm"
+              type="password"
+              required
+              minlength="8"
+              maxlength="128"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-actions profile-modal-actions">
+            <button type="button" class="btn" id="btn-profile-password-cancel">Отмена</button>
+            <button type="submit" class="btn btn-primary">Сменить пароль</button>
+          </div>
+        </form>
       </div>
     </div>
 
@@ -428,6 +424,6 @@
       aria-hidden="true"
     />
 
-    <script src="static/js/app.js?v=49" defer></script>
+    <script src="static/js/app.js?v=51" defer></script>
   </body>
 </html>

@@ -152,6 +152,36 @@ def test_change_password_rejects_wrong_current() -> None:
         assert patch_response.json()["detail"] == "Current password is incorrect"
 
 
+def test_change_password_accepts_current_with_outer_spaces() -> None:
+    with TestClient(app) as client:
+        suffix = uuid4().hex[:8]
+        username = f"trimcur_{suffix}"
+        email = f"{username}@example.com"
+        password = "strongpassword123"
+        new_password = "otherpass999"
+
+        client.post(
+            "/api/v1/auth/register",
+            json={"username": username, "email": email, "password": password},
+        )
+        token = _access_token_after_password_login(client, username, password)
+
+        patch_response = client.patch(
+            "/api/v1/auth/me/password",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"current_password": f"  {password}  ", "new_password": new_password},
+        )
+        assert patch_response.status_code == 204
+
+        assert (
+            client.post(
+                "/api/v1/auth/login",
+                json={"login": username, "password": new_password},
+            ).status_code
+            == 200
+        )
+
+
 def test_change_password_requires_auth() -> None:
     with TestClient(app) as client:
         response = client.patch(

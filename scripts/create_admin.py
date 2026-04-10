@@ -2,6 +2,24 @@ from __future__ import annotations
 
 import argparse
 import getpass
+from pathlib import Path
+import site
+import sys
+
+
+def _bootstrap_project_venv() -> None:
+    """Allow running via system python by loading local .venv deps."""
+    root = Path(__file__).resolve().parents[1]
+    lib_dir = root / ".venv" / "lib"
+    if not lib_dir.exists():
+        return
+    candidates = sorted(lib_dir.glob("python*/site-packages"))
+    if not candidates:
+        return
+    site.addsitedir(str(candidates[-1]))
+
+
+_bootstrap_project_venv()
 
 from sqlalchemy import or_, select
 

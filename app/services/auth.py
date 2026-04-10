@@ -77,7 +77,14 @@ def update_own_username(db: Session, user: User, new_username: str) -> User:
 
 
 def change_user_password(db: Session, user: User, current_password: str, new_password: str) -> None:
-    if not verify_password(current_password, user.password_hash):
+    # UI/copy-paste can accidentally add surrounding spaces.
+    # Keep strict check first; then allow a trimmed retry only if it differs.
+    current_ok = verify_password(current_password, user.password_hash)
+    if not current_ok:
+        trimmed_current = current_password.strip()
+        if trimmed_current != current_password:
+            current_ok = verify_password(trimmed_current, user.password_hash)
+    if not current_ok:
         raise AuthError("Current password is incorrect")
     if current_password == new_password:
         raise AuthError("New password must differ from the current password")

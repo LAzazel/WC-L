@@ -1206,31 +1206,19 @@
 
   const profileModalOverlay = document.getElementById("profile-modal-overlay");
   const profileModalChange = document.getElementById("profile-modal-change-name");
-  const profileModalPasswordHint = document.getElementById("profile-modal-password-hint");
-  const profileModalForgot = document.getElementById("profile-modal-forgot");
+  const profileModalChangePassword = document.getElementById("profile-modal-change-password");
 
   function closeProfileModals() {
     if (!profileModalOverlay) return;
     profileModalOverlay.classList.add("hidden");
     profileModalOverlay.setAttribute("aria-hidden", "true");
     profileModalChange?.classList.add("hidden");
-    profileModalPasswordHint?.classList.add("hidden");
-    profileModalForgot?.classList.add("hidden");
-  }
-
-  function openPasswordHintModal() {
-    if (!profileModalOverlay || !profileModalPasswordHint) return;
-    profileModalChange?.classList.add("hidden");
-    profileModalForgot?.classList.add("hidden");
-    profileModalPasswordHint.classList.remove("hidden");
-    profileModalOverlay.classList.remove("hidden");
-    profileModalOverlay.setAttribute("aria-hidden", "false");
+    profileModalChangePassword?.classList.add("hidden");
   }
 
   function openChangeNameModal() {
     if (!profileModalOverlay || !profileModalChange) return;
-    profileModalPasswordHint?.classList.add("hidden");
-    profileModalForgot?.classList.add("hidden");
+    profileModalChangePassword?.classList.add("hidden");
     profileModalChange.classList.remove("hidden");
     profileModalOverlay.classList.remove("hidden");
     profileModalOverlay.setAttribute("aria-hidden", "false");
@@ -1248,13 +1236,20 @@
       .catch(() => {});
   }
 
-  function openForgotModal() {
-    if (!profileModalOverlay || !profileModalForgot) return;
+  function openChangePasswordModal() {
+    if (!profileModalOverlay || !profileModalChangePassword) return;
     profileModalChange?.classList.add("hidden");
-    profileModalPasswordHint?.classList.add("hidden");
-    profileModalForgot.classList.remove("hidden");
+    profileModalChangePassword.classList.remove("hidden");
     profileModalOverlay.classList.remove("hidden");
     profileModalOverlay.setAttribute("aria-hidden", "false");
+    const mini = document.getElementById("profile-modal-password-msg");
+    if (mini) {
+      mini.textContent = "";
+      mini.className = "flash";
+    }
+    const form = document.getElementById("form-profile-change-password");
+    if (form) form.reset();
+    document.getElementById("input-profile-password-current")?.focus();
   }
 
   document.getElementById("view-profile")?.addEventListener("click", (e) => {
@@ -1271,16 +1266,13 @@
         showView("login");
         return;
       }
-      openPasswordHintModal();
+      openChangePasswordModal();
       return;
     }
   });
 
-  document.getElementById("btn-profile-password-hint-cancel")?.addEventListener("click", closeProfileModals);
-  document.getElementById("btn-profile-password-hint-to-forgot")?.addEventListener("click", openForgotModal);
-
   document.getElementById("btn-profile-modal-cancel")?.addEventListener("click", closeProfileModals);
-  document.getElementById("btn-profile-forgot-close")?.addEventListener("click", closeProfileModals);
+  document.getElementById("btn-profile-password-cancel")?.addEventListener("click", closeProfileModals);
   document.getElementById("profile-modal-scrim")?.addEventListener("click", closeProfileModals);
 
   document.getElementById("form-profile-change-username")?.addEventListener("submit", async (e) => {
@@ -1322,6 +1314,58 @@
               : detail === "Username must be at least 3 characters"
                 ? "Минимум 3 символа в имени."
                 : detail;
+        msg.textContent = ru;
+      }
+    }
+  });
+
+  document.getElementById("form-profile-change-password")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("profile-modal-password-msg");
+    const fd = new FormData(e.target);
+    const currentPassword = String(fd.get("current_password") || "");
+    const newPassword = String(fd.get("new_password") || "");
+    const newPasswordConfirm = String(fd.get("new_password_confirm") || "");
+
+    if (newPassword !== newPasswordConfirm) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Новый пароль и повтор не совпадают.";
+      }
+      return;
+    }
+    if (newPassword.length < 8) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Новый пароль должен быть не короче 8 символов.";
+      }
+      return;
+    }
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    try {
+      await apiFetch("/auth/me/password", {
+        method: "PATCH",
+        body: { current_password: currentPassword, new_password: newPassword },
+      });
+      closeProfileModals();
+      const pm = document.getElementById("profile-message");
+      if (pm) {
+        pm.className = "flash flash-success";
+        pm.textContent = "Пароль обновлён.";
+      }
+    } catch (err) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        const detail = err.message || "";
+        const ru =
+          detail === "Current password is incorrect"
+            ? "Старый пароль введён неверно."
+            : detail === "New password must differ from the current password"
+              ? "Новый пароль должен отличаться от текущего."
+              : detail;
         msg.textContent = ru;
       }
     }
@@ -1378,11 +1422,14 @@
       });
     }
 
-    /** Нижний край шапки (лого, навигация) в координатах документа — монеты не выше этого уровня */
+    /**
+     * Нижний край шапки в px от верха viewport.
+     * Важно: не добавляем scrollY, иначе при прокрутке вниз "потолок" едет вниз и прижимает монеты.
+     */
     function headerBottomDocY() {
       const el = document.querySelector(".site-header");
       if (!el) return 0;
-      return el.getBoundingClientRect().bottom + window.scrollY;
+      return el.getBoundingClientRect().bottom;
     }
 
     /** Верхний край полосы футера — монеты не ниже (как «рамка» снизу, симметрично шапке) */
