@@ -21,7 +21,7 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="static/css/fantasy.css?v=105" />
+    <link rel="stylesheet" href="static/css/fantasy.css?v=110" />
   </head>
   <body data-view="home">
     <div class="site-page">
@@ -268,7 +268,9 @@
               <button type="button" class="btn btn-ghost" id="btn-logout-2">Выйти</button>
             </div>
             <div class="profile-footer-actions-trailing">
-              <button type="button" class="btn" id="btn-profile-change-name">Сменить имя</button>
+              <button type="button" class="btn btn-primary hidden" id="btn-profile-guardians" data-nav="admin">
+                Зал хранителей
+              </button>
               <button type="button" class="btn btn-ghost" id="btn-profile-change-password">Изменить пароль</button>
             </div>
           </div>
@@ -401,15 +403,6 @@
       </div>
     </div>
 
-    <input
-      type="file"
-      id="profile-avatar-file-input"
-      class="hidden"
-      accept="image/*"
-      tabindex="-1"
-      aria-hidden="true"
-    />
-
-    <script src="static/js/app.js?v=54" defer></script>
+    <script src="static/js/app.js?v=59" defer></script>
   </body>
 </html>

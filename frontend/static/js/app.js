@@ -329,7 +329,8 @@
 
   /** Головы mc-heads.net; в меню только превью, подписи — в title (подсказка при наведении). */
   const MC_HEAD_MAIN = 128;
-  const MC_HEAD_MENU = 32;
+  /** Превью в меню «Внешний вид» (крупнее для сетки). */
+  const MC_HEAD_MENU = 48;
   const MC_AVATAR_VARIANTS = Object.freeze([
     { id: "coin_spin", headName: null, label: "Монета", asset: "img/avatar-1.gif" },
     {
@@ -356,12 +357,10 @@
     },
     { id: "chicken", headName: "MHF_Chicken", label: "Курица" },
     { id: "pig", headName: "MHF_Pig", label: "Свинья" },
-    { id: "custom_upload", headName: null, label: "С устройства" },
   ]);
   /** Раньше был «По нику» (скин mc-heads); теперь по умолчанию — монета. */
   const DEFAULT_MC_AVATAR_VARIANT = "coin_spin";
   const MC_AVATAR_STORAGE_KEY = "wc_l_mc_avatar_variant_by_user";
-  const WC_L_CUSTOM_AVATAR_KEY = "wc_l_custom_avatar_data_by_user";
   /** Декоративная рамка поверх аватарки (PNG поверх круга). */
   const PROFILE_FRAME_VARIANTS = Object.freeze([
     { id: "none", label: "Без рамки", asset: null },
@@ -369,19 +368,11 @@
   ]);
   const DEFAULT_PROFILE_FRAME = "none";
   const PROFILE_FRAME_STORAGE_KEY = "wc_l_profile_frame_by_user";
-  /** Превью плитки «с устройства», пока файл не выбран. */
-  const CUSTOM_AVATAR_MENU_PLACEHOLDER_SRC =
-    "data:image/svg+xml," +
-    encodeURIComponent(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="%23221818"/><path fill="none" stroke="%23c9a627" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" d="M7 22l12-12 3 3-12 12H7v-3z"/><path fill="%23c9a627" d="M19 10l3 3 1.5-1.5L20.5 8.5 19 10z"/></svg>'
-    );
 
   let _mcAvatarMapCache = null;
-  let _customAvatarMapCache = null;
   let _profileFrameMapCache = null;
   window.addEventListener("storage", (e) => {
     if (e.key === MC_AVATAR_STORAGE_KEY) _mcAvatarMapCache = null;
-    if (e.key === WC_L_CUSTOM_AVATAR_KEY) _customAvatarMapCache = null;
     if (e.key === PROFILE_FRAME_STORAGE_KEY) _profileFrameMapCache = null;
   });
 
@@ -447,8 +438,9 @@
     deco.src = localStaticUrl(def.asset);
   }
 
-  function renderProfileFrameMenuHtml(currentFrameId) {
-    const tiles = PROFILE_FRAME_VARIANTS.map((v) => {
+  function renderProfileFrameTilesHtml(currentFrameId, tileSize) {
+    const sz = tileSize != null ? tileSize : MC_HEAD_MENU;
+    return PROFILE_FRAME_VARIANTS.map((v) => {
       const sel = v.id === currentFrameId ? " is-selected" : "";
       const title = escapeHtml(v.label);
       let inner = "";
@@ -456,23 +448,61 @@
         inner = '<span class="profile-frame-tile-none" aria-hidden="true">—</span>';
       } else if (v.asset) {
         const src = localStaticUrl(v.asset);
-        inner = `<img src="${src}" alt="" width="32" height="32" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+        inner = `<img src="${src}" alt="" width="${sz}" height="${sz}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
       }
       return `<button type="button" class="profile-frame-tile${sel}" role="menuitem" data-profile-frame="${v.id}" title="${title}" aria-label="${title}">${inner}</button>`;
     }).join("");
-    return `<div class="profile-frame-menu hidden" id="profile-frame-menu" role="menu" aria-label="Рамка аватара" aria-hidden="true">
-      <div class="profile-frame-menu-grid" role="group">${tiles}</div>
+  }
+
+  /** Одно меню: сверху вкладки «Аватар» / «Рамка», ниже сетка. */
+  function renderProfileLookMenuHtml(username, currentVariantId, userId, currentFrameId) {
+    const avatarTiles = MC_AVATAR_VARIANTS.map((v) => {
+      const sel = v.id === currentVariantId ? " is-selected" : "";
+      const src = mcAvatarMenuTileSrc(username, v, userId);
+      const title = escapeHtml(v.label);
+      return `<button type="button" class="profile-avatar-tile${sel}" role="menuitem" data-mc-variant="${v.id}" title="${title}" aria-label="${title}">
+        <img src="${src}" alt="" width="${MC_HEAD_MENU}" height="${MC_HEAD_MENU}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+      </button>`;
+    }).join("");
+    const frameTiles = renderProfileFrameTilesHtml(currentFrameId, MC_HEAD_MENU);
+    return `<div class="profile-look-menu hidden" id="profile-look-menu" role="menu" aria-label="Внешний вид профиля" aria-hidden="true">
+      <div class="profile-look-menu-tabs" role="tablist" aria-label="Раздел">
+        <button type="button" class="profile-look-tab is-active" role="tab" id="profile-look-tab-avatar" data-look-tab="avatar" aria-selected="true" aria-controls="profile-look-panel-avatar">Аватар</button>
+        <button type="button" class="profile-look-tab" role="tab" id="profile-look-tab-frame" data-look-tab="frame" aria-selected="false" aria-controls="profile-look-panel-frame">Рамка</button>
+      </div>
+      <div class="profile-look-panel" id="profile-look-panel-avatar" role="tabpanel" aria-labelledby="profile-look-tab-avatar">
+        <div class="profile-look-grid profile-look-grid--avatar" role="group">${avatarTiles}</div>
+      </div>
+      <div class="profile-look-panel hidden" id="profile-look-panel-frame" role="tabpanel" aria-labelledby="profile-look-tab-frame">
+        <div class="profile-look-grid profile-look-grid--frame" role="group">${frameTiles}</div>
+      </div>
     </div>`;
   }
 
-  function closeProfileFrameMenu() {
-    const menu = document.getElementById("profile-frame-menu");
-    const btn = document.getElementById("profile-frame-edit-btn");
+  function setProfileLookTab(which) {
+    const avatarTab = document.getElementById("profile-look-tab-avatar");
+    const frameTab = document.getElementById("profile-look-tab-frame");
+    const avatarPanel = document.getElementById("profile-look-panel-avatar");
+    const framePanel = document.getElementById("profile-look-panel-frame");
+    if (!avatarTab || !frameTab || !avatarPanel || !framePanel) return;
+    const isAvatar = which === "avatar";
+    avatarTab.classList.toggle("is-active", isAvatar);
+    frameTab.classList.toggle("is-active", !isAvatar);
+    avatarTab.setAttribute("aria-selected", isAvatar ? "true" : "false");
+    frameTab.setAttribute("aria-selected", isAvatar ? "false" : "true");
+    avatarPanel.classList.toggle("hidden", !isAvatar);
+    framePanel.classList.toggle("hidden", isAvatar);
+  }
+
+  function closeProfileLookMenu() {
+    const menu = document.getElementById("profile-look-menu");
+    const btn = document.getElementById("profile-look-edit-btn");
     if (menu) {
       menu.classList.add("hidden");
       menu.setAttribute("aria-hidden", "true");
     }
     if (btn) btn.setAttribute("aria-expanded", "false");
+    setProfileLookTab("avatar");
   }
   function readMcAvatarMap() {
     if (_mcAvatarMapCache) return _mcAvatarMapCache;
@@ -491,87 +521,6 @@
     localStorage.setItem(MC_AVATAR_STORAGE_KEY, JSON.stringify(map));
   }
 
-  function readCustomAvatarMap() {
-    if (_customAvatarMapCache) return _customAvatarMapCache;
-    try {
-      const raw = localStorage.getItem(WC_L_CUSTOM_AVATAR_KEY);
-      _customAvatarMapCache = raw ? JSON.parse(raw) : {};
-      if (!_customAvatarMapCache || typeof _customAvatarMapCache !== "object") _customAvatarMapCache = {};
-    } catch {
-      _customAvatarMapCache = {};
-    }
-    return _customAvatarMapCache;
-  }
-
-  function writeCustomAvatarMap(map) {
-    localStorage.setItem(WC_L_CUSTOM_AVATAR_KEY, JSON.stringify(map));
-    _customAvatarMapCache = map;
-  }
-
-  function getCustomAvatarDataUrl(userId) {
-    const s = readCustomAvatarMap()[String(userId)];
-    return typeof s === "string" && s.startsWith("data:image/") ? s : "";
-  }
-
-  function setCustomAvatarDataUrl(userId, dataUrl) {
-    const map = { ...readCustomAvatarMap() };
-    map[String(userId)] = dataUrl;
-    try {
-      writeCustomAvatarMap(map);
-    } catch {
-      throw new Error("quota");
-    }
-  }
-
-  function downscaleImageFileToDataUrl(file, maxEdge, maxChars, minQuality) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onerror = () => reject(new Error("read"));
-      reader.onload = () => {
-        const img = new Image();
-        img.onload = () => {
-          try {
-            const w = img.naturalWidth;
-            const h = img.naturalHeight;
-            if (!w || !h) {
-              reject(new Error("size"));
-              return;
-            }
-            const scale = Math.min(1, maxEdge / Math.max(w, h));
-            const cw = Math.max(1, Math.round(w * scale));
-            const ch = Math.max(1, Math.round(h * scale));
-            const canvas = document.createElement("canvas");
-            canvas.width = cw;
-            canvas.height = ch;
-            const ctx = canvas.getContext("2d");
-            if (!ctx) {
-              reject(new Error("canvas"));
-              return;
-            }
-            ctx.drawImage(img, 0, 0, cw, ch);
-            let q = 0.88;
-            let dataUrl = canvas.toDataURL("image/jpeg", q);
-            const floor = minQuality != null ? minQuality : 0.42;
-            while (dataUrl.length > maxChars && q > floor) {
-              q -= 0.08;
-              dataUrl = canvas.toDataURL("image/jpeg", q);
-            }
-            if (dataUrl.length > maxChars) {
-              reject(new Error("large"));
-              return;
-            }
-            resolve(dataUrl);
-          } catch (e) {
-            reject(e);
-          }
-        };
-        img.onerror = () => reject(new Error("decode"));
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
   function getMcVariantDef(variantId) {
     for (let i = 0; i < MC_AVATAR_VARIANTS.length; i += 1) {
       if (MC_AVATAR_VARIANTS[i].id === variantId) return MC_AVATAR_VARIANTS[i];
@@ -584,12 +533,10 @@
 
   function getStoredMcVariant(userId) {
     const v = readMcAvatarMap()[String(userId)];
+    if (v === "custom_upload") return DEFAULT_MC_AVATAR_VARIANT;
     if (v) {
       for (let i = 0; i < MC_AVATAR_VARIANTS.length; i += 1) {
-        if (MC_AVATAR_VARIANTS[i].id === v) {
-          if (v === "custom_upload" && !getCustomAvatarDataUrl(userId)) return DEFAULT_MC_AVATAR_VARIANT;
-          return v;
-        }
+        if (MC_AVATAR_VARIANTS[i].id === v) return v;
       }
     }
     return DEFAULT_MC_AVATAR_VARIANT;
@@ -627,9 +574,6 @@
    */
   function buildMcAvatarUrl(username, variantId, size, userId) {
     const v = getMcVariantDef(variantId);
-    if (v.id === "custom_upload") {
-      return userId != null ? getCustomAvatarDataUrl(Number(userId)) : "";
-    }
     if (v.asset) {
       return localStaticUrl(v.asset);
     }
@@ -647,10 +591,6 @@
   }
 
   function mcAvatarMenuTileSrc(username, v, userId) {
-    if (v.id === "custom_upload") {
-      const d = userId != null ? getCustomAvatarDataUrl(Number(userId)) : "";
-      return d || CUSTOM_AVATAR_MENU_PLACEHOLDER_SRC;
-    }
     return buildMcAvatarUrl(username, v.id, MC_HEAD_MENU, userId);
   }
 
@@ -669,10 +609,6 @@
   /** Если mc-heads недоступен — minotar, потом запасной Steve; иначе остаются инициалы (например «AD» у admin). */
   function avatarUrlChain(username, variantId, size, userId) {
     const v = getMcVariantDef(variantId);
-    if (v.id === "custom_upload") {
-      const d = userId != null ? getCustomAvatarDataUrl(Number(userId)) : "";
-      return d ? [d] : [];
-    }
     if (v.asset) {
       return [localStaticUrl(v.asset)];
     }
@@ -684,20 +620,6 @@
       `https://minotar.net/helm/${encodeURIComponent(skin)}/${size}`,
       `https://mc-heads.net/avatar/Steve/${size}`,
     ]);
-  }
-
-  function renderMcAvatarMenuHtml(username, currentVariantId, userId) {
-    const tiles = MC_AVATAR_VARIANTS.map((v) => {
-      const sel = v.id === currentVariantId ? " is-selected" : "";
-      const src = mcAvatarMenuTileSrc(username, v, userId);
-      const title = escapeHtml(v.label);
-      return `<button type="button" class="profile-avatar-tile${sel}" role="menuitem" data-mc-variant="${v.id}" title="${title}" aria-label="${title}">
-        <img src="${src}" alt="" width="${MC_HEAD_MENU}" height="${MC_HEAD_MENU}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
-      </button>`;
-    }).join("");
-    return `<div class="profile-avatar-menu hidden" id="profile-avatar-menu" role="menu" aria-label="Выбор головы Minecraft" aria-hidden="true">
-      <div class="profile-avatar-menu-grid" role="group">${tiles}</div>
-    </div>`;
   }
 
   function bindProfileAvatarImage(box, username, variantId) {
@@ -728,7 +650,7 @@
   }
 
   function bindMcAvatarMenuTiles(root) {
-    const menu = root.querySelector("#profile-avatar-menu");
+    const menu = root.querySelector("#profile-look-menu");
     const un = root.dataset.profileUsername;
     const uid = root.dataset.profileUserId !== undefined ? Number(root.dataset.profileUserId, 10) : null;
     if (!menu || un === undefined) return;
@@ -778,54 +700,28 @@
     bindProfileAvatarImage(box, username, variantId);
   }
 
-  function closeMcAvatarMenu() {
-    const menu = document.getElementById("profile-avatar-menu");
-    const editBtn = document.getElementById("profile-avatar-edit-btn");
-    if (menu) {
-      menu.classList.add("hidden");
-      menu.setAttribute("aria-hidden", "true");
-    }
-    if (editBtn) editBtn.setAttribute("aria-expanded", "false");
-  }
-
   document.body.addEventListener("click", (e) => {
-    const uploadBtn = e.target.closest("#profile-avatar-upload-btn");
-    if (uploadBtn && document.getElementById("profile-content")?.contains(uploadBtn)) {
+    const lookTab = e.target.closest("[data-look-tab]");
+    if (lookTab && document.getElementById("profile-content")?.contains(lookTab)) {
       e.stopPropagation();
-      document.getElementById("profile-avatar-file-input")?.click();
+      const tab = lookTab.getAttribute("data-look-tab");
+      if (tab === "avatar" || tab === "frame") setProfileLookTab(tab);
       return;
     }
 
-    const editBtn = e.target.closest("#profile-avatar-edit-btn");
-    if (editBtn && document.getElementById("profile-content")?.contains(editBtn)) {
+    const lookBtn = e.target.closest("#profile-look-edit-btn");
+    if (lookBtn && document.getElementById("profile-content")?.contains(lookBtn)) {
       e.stopPropagation();
-      const menu = document.getElementById("profile-avatar-menu");
-      if (!menu) return;
-      const open = menu.classList.contains("hidden");
-      if (open) {
-        closeProfileFrameMenu();
-        menu.classList.remove("hidden");
-        menu.setAttribute("aria-hidden", "false");
-        editBtn.setAttribute("aria-expanded", "true");
-      } else {
-        closeMcAvatarMenu();
-      }
-      return;
-    }
-
-    const frameBtn = e.target.closest("#profile-frame-edit-btn");
-    if (frameBtn && document.getElementById("profile-content")?.contains(frameBtn)) {
-      e.stopPropagation();
-      const menu = document.getElementById("profile-frame-menu");
+      const menu = document.getElementById("profile-look-menu");
       if (!menu) return;
       const willOpen = menu.classList.contains("hidden");
       if (willOpen) {
-        closeMcAvatarMenu();
+        setProfileLookTab("avatar");
         menu.classList.remove("hidden");
         menu.setAttribute("aria-hidden", "false");
-        frameBtn.setAttribute("aria-expanded", "true");
+        lookBtn.setAttribute("aria-expanded", "true");
       } else {
-        closeProfileFrameMenu();
+        closeProfileLookMenu();
       }
       return;
     }
@@ -839,16 +735,12 @@
       if (userId === undefined || username === undefined) return;
       const variantId = item.getAttribute("data-mc-variant");
       if (!variantId || !MC_AVATAR_VARIANTS.some((v) => v.id === variantId)) return;
-      if (variantId === "custom_upload" && !getCustomAvatarDataUrl(Number(userId, 10))) {
-        document.getElementById("profile-avatar-file-input")?.click();
-        return;
-      }
       setStoredMcVariant(Number(userId), variantId);
       setMainProfileAvatar(root, username, variantId);
       root.querySelectorAll("[data-mc-variant]").forEach((el) => {
         el.classList.toggle("is-selected", el.getAttribute("data-mc-variant") === variantId);
       });
-      closeMcAvatarMenu();
+      closeProfileLookMenu();
     }
 
     const frameItem = e.target.closest("[data-profile-frame]");
@@ -865,64 +757,19 @@
       frameRoot.querySelectorAll("[data-profile-frame]").forEach((el) => {
         el.classList.toggle("is-selected", el.getAttribute("data-profile-frame") === frameId);
       });
-      closeProfileFrameMenu();
+      closeProfileLookMenu();
     }
   });
 
   document.addEventListener("click", (e) => {
     if (e.target.closest(".profile-avatar-shell")) return;
-    closeMcAvatarMenu();
-    closeProfileFrameMenu();
+    if (e.target.closest(".profile-hero-look-wrap")) return;
+    closeProfileLookMenu();
   });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
-      closeMcAvatarMenu();
-      closeProfileFrameMenu();
-    }
-  });
-
-  document.getElementById("profile-avatar-file-input")?.addEventListener("change", async (e) => {
-    const input = e.target;
-    const file = input.files && input.files[0];
-    input.value = "";
-    if (!file || !String(file.type || "").startsWith("image/")) return;
-    const root = document.getElementById("profile-content");
-    const userIdStr = root && root.dataset.profileUserId;
-    if (!root || userIdStr === undefined) return;
-    const uid = Number(userIdStr, 10);
-    const username = root.dataset.profileUsername;
-    const msg = document.getElementById("profile-message");
-    try {
-      const dataUrl = await downscaleImageFileToDataUrl(file, 256, 480000, 0.42);
-      setCustomAvatarDataUrl(uid, dataUrl);
-      setStoredMcVariant(uid, "custom_upload");
-      if (username !== undefined) {
-        setMainProfileAvatar(root, username, "custom_upload");
-        root.querySelectorAll("[data-mc-variant]").forEach((el) => {
-          el.classList.toggle("is-selected", el.getAttribute("data-mc-variant") === "custom_upload");
-        });
-        const tileImg = root.querySelector('[data-mc-variant="custom_upload"] img');
-        if (tileImg) tileImg.src = dataUrl;
-        bindMcAvatarMenuTiles(root);
-        closeMcAvatarMenu();
-      }
-      if (msg) {
-        msg.className = "flash";
-        msg.textContent = "";
-      }
-    } catch (err) {
-      const code = err && err.message;
-      if (msg) {
-        msg.className = "flash flash-error";
-        if (code === "quota") {
-          msg.textContent = "Не хватает места в хранилище браузера. Освободите данные сайта или выберите файл меньше.";
-        } else if (code === "large") {
-          msg.textContent = "Файл слишком большой после сжатия. Выберите другое изображение.";
-        } else {
-          msg.textContent = "Не удалось загрузить изображение. Попробуйте другой файл (JPG, PNG).";
-        }
-      }
+      closeProfileLookMenu();
     }
   });
 
@@ -978,10 +825,6 @@
         ? '<span class="profile-badge profile-badge-exile">Изгнан</span>'
         : '<span class="profile-badge profile-badge-warden">В цитадели</span>';
 
-      const adminBlock = me.is_admin
-        ? '<div class="profile-hero-admin"><button type="button" class="btn btn-primary" data-nav="admin">Зал хранителей</button></div>'
-        : "";
-
       box.innerHTML = `
         <div class="profile-layout">
           <div class="profile-top-band">
@@ -997,35 +840,20 @@
                     </div>
                     <img class="profile-avatar-frame-deco is-hidden" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                   </div>
-                  <div class="profile-avatar-bookmarks" role="toolbar" aria-label="Голова Minecraft, рамка, свой аватар">
-                    <div class="profile-avatar-bookmark">
-                      <div class="profile-avatar-bookmark-tab">
-                        <button type="button" class="profile-avatar-edit-btn" id="profile-avatar-edit-btn" aria-expanded="false" aria-controls="profile-avatar-menu" aria-haspopup="true" title="Выбрать голову Minecraft">✎</button>
-                      </div>
-                      ${renderMcAvatarMenuHtml(me.username, variantId, me.id)}
-                    </div>
-                    <div class="profile-avatar-bookmark">
-                      <div class="profile-avatar-bookmark-tab">
-                        <button type="button" class="profile-avatar-frame-btn" id="profile-frame-edit-btn" aria-expanded="false" aria-controls="profile-frame-menu" aria-haspopup="true" title="Рамка аватара" aria-label="Выбор рамки">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><rect x="7" y="7" width="10" height="10" rx="1" ry="1"/></svg>
-                        </button>
-                      </div>
-                      ${renderProfileFrameMenuHtml(profileFrameId)}
-                    </div>
-                    <div class="profile-avatar-bookmark">
-                      <div class="profile-avatar-bookmark-tab">
-                        <button type="button" class="profile-avatar-upload-btn" id="profile-avatar-upload-btn" title="Загрузить аватар с устройства" aria-label="Загрузить аватар с устройства">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.24 12.24a6 6 0 0 0-8.49-8.49L5 10.5V19h8.5l6.74-6.74z"/><line x1="16" y1="8" x2="2" y2="22"/></svg>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
               <div class="profile-top-main">
-                <h3 class="profile-hero-name">${escapeHtml(me.username)}</h3>
+                <div class="profile-hero-name-row">
+                  <h3 class="profile-hero-name">${escapeHtml(me.username)}</h3>
+                </div>
                 <div class="profile-hero-badges">${guardianBadge}${banBadge}</div>
-                ${adminBlock}
+                <div class="profile-hero-look-wrap">
+                  <div class="profile-hero-look-actions">
+                    <button type="button" class="btn" id="profile-look-edit-btn" aria-expanded="false" aria-controls="profile-look-menu" aria-haspopup="true">Аватар</button>
+                    <button type="button" class="btn btn-ghost" id="btn-profile-change-name-inline">Сменить имя</button>
+                  </div>
+                  ${renderProfileLookMenuHtml(me.username, variantId, me.id, profileFrameId)}
+                </div>
               </div>
             </div>
             <div class="profile-top-divider" aria-hidden="true"></div>
@@ -1036,6 +864,8 @@
 
       box.dataset.profileUserId = String(me.id);
       box.dataset.profileUsername = me.username;
+      const guardiansBtn = document.getElementById("btn-profile-guardians");
+      if (guardiansBtn) guardiansBtn.classList.toggle("hidden", !me.is_admin);
       bindProfileAvatarImage(box, me.username, variantId);
       bindMcAvatarMenuTiles(box);
       applyProfileFrameOverlay(box, me.id);
@@ -1180,6 +1010,7 @@
   }
 
   function openChangeNameModal() {
+    closeProfileLookMenu();
     if (!profileModalOverlay || !profileModalChange) return;
     profileModalChangePassword?.classList.add("hidden");
     profileModalChange.classList.remove("hidden");
@@ -1216,7 +1047,7 @@
   }
 
   document.getElementById("view-profile")?.addEventListener("click", (e) => {
-    if (e.target.closest("#btn-profile-change-name")) {
+    if (e.target.closest("#btn-profile-change-name-inline")) {
       if (!getToken()) {
         showView("login");
         return;

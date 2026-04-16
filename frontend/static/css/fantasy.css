@@ -1149,8 +1149,31 @@ label.admin-filter input {
   border-bottom: none;
 }
 
-.profile-hero-admin {
-  margin-top: 1.25rem;
+.profile-hero-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.35rem;
+}
+
+.profile-hero-name-row .profile-hero-name {
+  margin: 0;
+}
+
+/* «Сменить имя» + «Аватар» в один ряд; выпадающее меню под блоком */
+.profile-hero-look-wrap {
+  position: relative;
+  display: inline-block;
+  margin-top: 1.1rem;
+  vertical-align: top;
+}
+
+.profile-hero-look-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
 }
 
 .profile-avatar-stack {
@@ -1633,7 +1656,6 @@ label.admin-filter input {
 }
 
 .profile-avatar-bookmark .profile-avatar-edit-btn,
-.profile-avatar-bookmark .profile-avatar-upload-btn,
 .profile-avatar-bookmark .profile-avatar-frame-btn {
   width: 44px;
   height: 44px;
@@ -1661,16 +1683,16 @@ label.admin-filter input {
   line-height: 1;
 }
 
-.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-upload-btn, .profile-avatar-frame-btn):hover {
+.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-frame-btn):hover {
   border-right-color: var(--border-gold);
   box-shadow: inset 0 0 12px rgba(201, 162, 39, 0.12);
 }
 
-.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-upload-btn, .profile-avatar-frame-btn):active {
+.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-frame-btn):active {
   transform: scale(0.97);
 }
 
-.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-upload-btn, .profile-avatar-frame-btn):focus-visible {
+.profile-avatar-bookmark :is(.profile-avatar-edit-btn, .profile-avatar-frame-btn):focus-visible {
   outline: 2px solid var(--border-gold);
   outline-offset: 2px;
 }
@@ -1679,6 +1701,11 @@ label.admin-filter input {
 .profile-avatar-bookmark .profile-avatar-frame-btn[aria-expanded="true"] {
   background: linear-gradient(180deg, #4a3d28, #352a18);
   box-shadow: inset 0 0 14px rgba(201, 162, 39, 0.15);
+}
+
+.profile-hero-look-wrap #profile-look-edit-btn[aria-expanded="true"] {
+  border-color: var(--border-gold);
+  box-shadow: 0 0 12px var(--glow-gold);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1693,28 +1720,25 @@ label.admin-filter input {
   }
 
   .profile-avatar-bookmark .profile-avatar-edit-btn,
-  .profile-avatar-bookmark .profile-avatar-upload-btn,
   .profile-avatar-bookmark .profile-avatar-frame-btn {
     transition: none;
   }
 }
 
-.profile-avatar-menu,
-.profile-frame-menu {
+.profile-hero-look-wrap .profile-look-menu {
   position: absolute;
-  top: 50%;
-  left: calc(100% + 10px);
+  top: calc(100% + 8px);
+  left: 0;
   right: auto;
-  transform: translateY(-50%);
+  transform: none;
   z-index: 80;
   width: max-content;
-  max-width: min(92vw, 300px);
-  max-height: min(72vh, 360px);
-  overflow-x: hidden;
-  overflow-y: auto;
-  padding: 0;
+  max-width: min(96vw, 440px);
+  max-height: min(80vh, 520px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   margin: 0;
-  list-style: none;
   border-radius: 12px;
   border: 1px solid var(--border-gold-dim);
   background: linear-gradient(180deg, rgba(32, 26, 42, 0.98), rgba(14, 11, 20, 0.99));
@@ -1723,25 +1747,75 @@ label.admin-filter input {
     0 0 0 1px rgba(201, 162, 39, 0.15);
 }
 
-.profile-avatar-menu.hidden,
-.profile-frame-menu.hidden {
+.profile-look-menu.hidden {
   display: none !important;
 }
 
-.profile-avatar-menu-grid,
-.profile-frame-menu-grid {
+.profile-look-menu-tabs {
+  display: flex;
+  flex-shrink: 0;
+  gap: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border-gold-dim);
+  background: rgba(10, 8, 16, 0.5);
+}
+
+.profile-look-tab {
+  flex: 1 1 50%;
+  margin: 0;
+  padding: 0.65rem 0.75rem;
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.profile-look-tab:hover {
+  color: var(--text-parchment);
+  background: rgba(201, 162, 39, 0.06);
+}
+
+.profile-look-tab.is-active {
+  color: var(--border-gold);
+  border-bottom-color: var(--border-gold);
+  background: rgba(201, 162, 39, 0.08);
+}
+
+.profile-look-panel {
+  overflow-x: hidden;
+  overflow-y: auto;
+  padding: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.profile-look-panel.hidden {
+  display: none !important;
+}
+
+.profile-look-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 32px));
-  gap: 0.4rem;
-  padding: 0.5rem;
+  grid-template-columns: repeat(4, minmax(0, 52px));
+  gap: 0.55rem;
+  padding: 0.75rem;
+  justify-content: start;
 }
 
 .profile-avatar-tile,
 .profile-frame-tile {
   margin: 0;
   padding: 0;
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   border: 2px solid var(--border-gold-dim);
   border-radius: 10px;
   background: rgba(10, 8, 16, 0.9);
@@ -1804,7 +1878,7 @@ label.admin-filter input {
   outline-offset: 2px;
 }
 
-/* Под контентом кабинета: слева «На главную» / «Выйти», справа «Сменить имя» / «Изменить пароль» */
+/* Под контентом кабинета: слева навигация/выход, справа зал хранителей (если есть) и пароль */
 .profile-footer-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1846,19 +1920,14 @@ label.admin-filter input {
     gap: 0.25rem;
   }
 
-  .profile-avatar-menu,
-  .profile-frame-menu {
-    left: calc(100% + 8px);
+  .profile-hero-look-wrap .profile-look-menu {
+    left: 0;
     right: auto;
-    margin-left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    max-width: min(calc(100vw - 2rem), 300px);
+    max-width: min(calc(100vw - 1rem), 420px);
   }
 
-  .profile-avatar-menu-grid,
-  .profile-frame-menu-grid {
-    grid-template-columns: repeat(3, minmax(0, 32px));
+  .profile-look-grid {
+    grid-template-columns: repeat(3, minmax(0, 52px));
   }
 }
 
