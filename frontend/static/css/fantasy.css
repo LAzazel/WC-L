@@ -671,23 +671,31 @@ a:hover {
   }
 }
 
-#view-login.is-visible .panel > h2,
-#view-register.is-visible .panel > h2 {
+#view-login.is-visible .panel .panel-auth-head h2,
+#view-register.is-visible .panel > h2,
+#view-forgot-password.is-visible .panel > h2 {
   animation: authBitIn 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.06s both;
 }
 
 #view-login.is-visible .panel > p,
-#view-register.is-visible .panel > p {
+#view-register.is-visible .panel > p,
+#view-forgot-password.is-visible .forgot-lead {
   animation: authBitIn 0.48s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
 }
 
 #view-login.is-visible #login-message,
-#view-register.is-visible #register-message {
+#view-register.is-visible #register-message,
+#view-forgot-password.is-visible #forgot-password-message {
   animation: authBitIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) 0.16s both;
 }
 
+#view-login.is-visible .panel-auth-head .auth-link-forgot {
+  animation: authBitIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
 #view-login.is-visible form .form-group:nth-child(1),
-#view-register.is-visible form .form-group:nth-child(1) {
+#view-register.is-visible form .form-group:nth-child(1),
+#view-forgot-password.is-visible form .form-group:nth-child(1) {
   animation: authBitIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.22s both;
 }
 
@@ -701,7 +709,8 @@ a:hover {
 }
 
 #view-login.is-visible form .form-actions,
-#view-register.is-visible form .form-actions {
+#view-register.is-visible form .form-actions,
+#view-forgot-password.is-visible form .form-actions {
   animation: authBitIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.4s both;
 }
 
@@ -748,7 +757,8 @@ a:hover {
     animation: none !important;
   }
 
-  #view-login.is-visible .panel > h2,
+  #view-login.is-visible .panel .panel-auth-head h2,
+  #view-login.is-visible .panel-auth-head .auth-link-forgot,
   #view-login.is-visible .panel > p,
   #view-login.is-visible #login-message,
   #view-login.is-visible form .form-group,
@@ -757,7 +767,12 @@ a:hover {
   #view-register.is-visible .panel > p,
   #view-register.is-visible #register-message,
   #view-register.is-visible form .form-group,
-  #view-register.is-visible form .form-actions {
+  #view-register.is-visible form .form-actions,
+  #view-forgot-password.is-visible .panel > h2,
+  #view-forgot-password.is-visible .forgot-lead,
+  #view-forgot-password.is-visible #forgot-password-message,
+  #view-forgot-password.is-visible form .form-group,
+  #view-forgot-password.is-visible form .form-actions {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
@@ -797,6 +812,61 @@ a:hover {
   border-bottom: 1px solid var(--border-gold-dim);
   padding-bottom: 0.5rem;
   margin-bottom: 1rem;
+}
+
+.panel-auth-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-gold-dim);
+}
+
+.panel-auth-head h2 {
+  flex: 1 1 auto;
+  min-width: 0;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.auth-link-forgot {
+  flex-shrink: 0;
+  align-self: center;
+  margin: 0;
+  padding: 0.15rem 0;
+  border: none;
+  background: transparent;
+  color: var(--border-gold);
+  font-family: var(--font-heading);
+  font-size: 0.8rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: color 0.2s;
+}
+
+.auth-link-forgot:hover {
+  color: #f0dc82;
+}
+
+.forgot-lead {
+  margin-top: 0;
+}
+
+.forgot-next-hint {
+  font-size: 0.92rem;
+  opacity: 0.9;
+}
+
+#forgot-password-step-sent p {
+  line-height: 1.55;
 }
 
 /* ——— Герой ——— */
@@ -2025,6 +2095,60 @@ label.admin-filter input {
   color: var(--border-gold);
 }
 
+.profile-modal-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+}
+
+.profile-modal-head .profile-modal-title {
+  margin-bottom: 0;
+}
+
+/* Строка «подпись слева — ссылка справа» */
+.profile-modal .form-label-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 0.85rem;
+  margin: 0 0 0.45rem;
+}
+
+.profile-modal .form-label-row label {
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.profile-modal .form-label-row .profile-modal-link {
+  flex-shrink: 0;
+  align-self: flex-end;
+  text-align: right;
+}
+
+.profile-modal-link {
+  margin: 0;
+  padding: 0.08rem 0;
+  border: none;
+  background: transparent;
+  color: var(--border-gold);
+  font-family: var(--font-heading);
+  font-size: 0.69rem;
+  font-weight: 400;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.profile-modal-link:hover {
+  color: #f0dc82;
+}
+
 .profile-modal-hint {
   margin: 0 0 1rem;
   font-size: 0.92rem;
@@ -2042,7 +2166,18 @@ label.admin-filter input {
   min-height: 0;
 }
 
-#profile-modal-password-msg {
+#profile-modal-password-msg,
+#profile-modal-reset-password-msg,
+#profile-modal-forgot-msg {
   margin-bottom: 0.75rem;
   min-height: 0;
+}
+
+.profile-modal-forgot-sent-lead {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.profile-modal-forgot-sent-lead strong {
+  color: var(--border-gold);
 }

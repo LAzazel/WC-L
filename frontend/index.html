@@ -21,7 +21,7 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="static/css/fantasy.css?v=110" />
+    <link rel="stylesheet" href="static/css/fantasy.css?v=114" />
   </head>
   <body data-view="home">
     <div class="site-page">
@@ -202,7 +202,10 @@
       <!-- Вход -->
       <section id="view-login" class="view">
         <div class="panel">
-          <h2>Вход в цитадель</h2>
+          <div class="panel-auth-head">
+            <h2>Вход в цитадель</h2>
+            <button type="button" class="auth-link-forgot" data-nav="forgot-password">Забыл пароль</button>
+          </div>
           <p>Имя героя или email и пароль.</p>
           <div id="login-message" class="flash" role="status"></div>
           <form id="form-login">
@@ -226,6 +229,57 @@
               <button type="button" class="btn" data-nav="register">Создать аккаунт</button>
             </div>
           </form>
+        </div>
+      </section>
+
+      <!-- TODO(backend): подключить восстановление пароля.
+           1) отправка письма по email
+           2) переход по ссылке из письма
+           3) сохранение нового пароля по token/code -->
+      <section id="view-forgot-password" class="view">
+        <div class="panel">
+          <h2>Восстановление пароля</h2>
+          <p class="forgot-lead">
+            Укажите адрес электронной почты, к которому привязана учётная запись. Мы отправим письмо со ссылкой для
+            смены пароля.
+          </p>
+          <div id="forgot-password-message" class="flash" role="status"></div>
+          <div id="forgot-password-step-form">
+            <form id="form-forgot-password" novalidate>
+              <div class="form-group">
+                <label for="forgot-email">Email</label>
+                <input
+                  id="forgot-email"
+                  name="email"
+                  type="email"
+                  required
+                  autocomplete="email"
+                  placeholder="you@example.com"
+                />
+              </div>
+              <div class="form-actions">
+                <button type="button" class="btn" data-nav="login">Назад ко входу</button>
+                <button type="submit" class="btn btn-primary">Отправить письмо</button>
+              </div>
+            </form>
+          </div>
+          <div id="forgot-password-step-sent" class="hidden">
+            <p>
+              Если такой адрес есть в системе, на <strong id="forgot-email-masked"></strong> придёт письмо со ссылкой
+              для смены пароля.
+            </p>
+            <p>
+              Откройте письмо и перейдите по ссылке — вас перенесёт на сайт, и появится окно ввода <strong>нового</strong>
+              пароля (без старого). Если письма нет несколько минут, проверьте папку «Спам» и настройки почты.
+            </p>
+            <p class="forgot-next-hint">
+              Дальше: после перехода по ссылке задайте новый пароль и войдите, как обычно. Пока бэкенд не подключён,
+              отправка письма и сохранение пароля на сервере недоступны — это макет интерфейса.
+            </p>
+            <div class="form-actions">
+              <button type="button" class="btn btn-primary" data-nav="login">Вернуться ко входу</button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -360,7 +414,12 @@
         <div id="profile-modal-password-msg" class="flash" role="status"></div>
         <form id="form-profile-change-password">
           <div class="form-group">
-            <label for="input-profile-password-current">Старый пароль</label>
+            <div class="form-label-row">
+              <label for="input-profile-password-current">Старый пароль</label>
+              <button type="button" class="profile-modal-link" id="btn-profile-forgot-password">
+                Забыл пароль
+              </button>
+            </div>
             <input
               id="input-profile-password-current"
               name="current_password"
@@ -401,8 +460,69 @@
           </div>
         </form>
       </div>
+      <!-- TODO(backend): письмо + смена пароля по ссылке; сейчас только UI -->
+      <div
+        id="profile-modal-forgot-password"
+        class="profile-modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-forgot-password-title"
+      >
+        <h3 id="profile-modal-forgot-password-title" class="profile-modal-title">Восстановление пароля</h3>
+        <p class="profile-modal-forgot-sent-lead">
+          На адрес электронной почты <strong id="profile-forgot-email-masked"></strong> отправлено сообщение для смены
+          пароля. Если сообщение не пришло, проверьте папку «Спам».
+        </p>
+        <div class="form-actions profile-modal-actions">
+          <button type="button" class="btn btn-primary" id="btn-profile-forgot-done">Закрыть</button>
+        </div>
+      </div>
+      <!-- TODO(backend): эта модалка должна открываться после перехода по ссылке из письма -->
+      <div
+        id="profile-modal-reset-password"
+        class="profile-modal hidden"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="profile-modal-reset-password-title"
+      >
+        <h3 id="profile-modal-reset-password-title" class="profile-modal-title">Новый пароль</h3>
+        <p class="profile-modal-hint">
+          Вы перешли по ссылке из письма. Задайте новый пароль дважды. Старый пароль не нужен.
+        </p>
+        <div id="profile-modal-reset-password-msg" class="flash" role="status"></div>
+        <form id="form-profile-reset-password">
+          <div class="form-group">
+            <label for="input-profile-reset-password-new">Новый пароль</label>
+            <input
+              id="input-profile-reset-password-new"
+              name="new_password"
+              type="password"
+              required
+              minlength="8"
+              maxlength="128"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-group">
+            <label for="input-profile-reset-password-new-2">Повторите новый пароль</label>
+            <input
+              id="input-profile-reset-password-new-2"
+              name="new_password_confirm"
+              type="password"
+              required
+              minlength="8"
+              maxlength="128"
+              autocomplete="new-password"
+            />
+          </div>
+          <div class="form-actions profile-modal-actions">
+            <button type="button" class="btn" id="btn-profile-reset-password-cancel">Закрыть</button>
+            <button type="submit" class="btn btn-primary">Сохранить пароль</button>
+          </div>
+        </form>
+      </div>
     </div>
 
-    <script src="static/js/app.js?v=59" defer></script>
+    <script src="static/js/app.js?v=62" defer></script>
   </body>
 </html>

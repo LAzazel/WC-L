@@ -34,6 +34,7 @@
     "news",
     "connect",
     "login",
+    "forgot-password",
     "register",
     "profile",
     "admin",
@@ -87,6 +88,7 @@
     news: document.getElementById("view-news"),
     connect: document.getElementById("view-connect"),
     login: document.getElementById("view-login"),
+    "forgot-password": document.getElementById("view-forgot-password"),
     register: document.getElementById("view-register"),
     profile: document.getElementById("view-profile"),
     admin: document.getElementById("view-admin"),
@@ -187,6 +189,36 @@
     return _authMePending;
   }
 
+  /** Часть локальной части email видна, остальное — звёздочки (до @). */
+  function maskEmailHalf(email) {
+    const s = String(email || "").trim();
+    if (!s) return "•••@•••";
+    const at = s.indexOf("@");
+    if (at < 1) {
+      const half = Math.ceil(s.length / 2);
+      return s.slice(0, half) + "*".repeat(Math.max(2, s.length - half));
+    }
+    const local = s.slice(0, at);
+    const domain = s.slice(at + 1);
+    const vis = Math.max(1, Math.ceil(local.length / 2));
+    const maskedLocal = local.slice(0, vis) + "*".repeat(Math.max(2, local.length - vis));
+    return `${maskedLocal}@${domain}`;
+  }
+
+  function resetForgotPasswordUi() {
+    const stepForm = document.getElementById("forgot-password-step-form");
+    const stepSent = document.getElementById("forgot-password-step-sent");
+    const msg = document.getElementById("forgot-password-message");
+    const form = document.getElementById("form-forgot-password");
+    if (stepForm) stepForm.classList.remove("hidden");
+    if (stepSent) stepSent.classList.add("hidden");
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    form?.reset();
+  }
+
   function showView(name) {
     persistCurrentView(name);
     document.body.setAttribute("data-view", name);
@@ -200,6 +232,7 @@
     });
     if (name === "profile") loadProfile();
     if (name === "admin") loadAdminUsers();
+    if (name === "forgot-password") resetForgotPasswordUi();
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     requestAnimationFrame(() => document.dispatchEvent(new CustomEvent("wc-l-layout-refresh")));
   }
@@ -1000,6 +1033,8 @@
   const profileModalOverlay = document.getElementById("profile-modal-overlay");
   const profileModalChange = document.getElementById("profile-modal-change-name");
   const profileModalChangePassword = document.getElementById("profile-modal-change-password");
+  const profileModalForgotPassword = document.getElementById("profile-modal-forgot-password");
+  const profileModalResetPassword = document.getElementById("profile-modal-reset-password");
 
   function closeProfileModals() {
     if (!profileModalOverlay) return;
@@ -1007,11 +1042,65 @@
     profileModalOverlay.setAttribute("aria-hidden", "true");
     profileModalChange?.classList.add("hidden");
     profileModalChangePassword?.classList.add("hidden");
+    profileModalForgotPassword?.classList.add("hidden");
+    profileModalResetPassword?.classList.add("hidden");
+  }
+
+  function resetProfileForgotModal() {
+    const msg = document.getElementById("profile-modal-forgot-msg");
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+  }
+
+  function openForgotPasswordFromProfileModal() {
+    if (!profileModalOverlay || !profileModalForgotPassword) return;
+    profileModalChange?.classList.add("hidden");
+    profileModalChangePassword?.classList.add("hidden");
+    profileModalResetPassword?.classList.add("hidden");
+    resetProfileForgotModal();
+    profileModalForgotPassword.classList.remove("hidden");
+    profileModalOverlay.classList.remove("hidden");
+    profileModalOverlay.setAttribute("aria-hidden", "false");
+    fetchAuthMeCached()
+      .then((me) => {
+        const masked = document.getElementById("profile-forgot-email-masked");
+        if (masked) masked.textContent = maskEmailHalf(me && me.email ? me.email : "");
+        // TODO(backend): автоматически вызывать отправку письма при открытии этой модалки.
+        document.getElementById("btn-profile-forgot-done")?.focus();
+      })
+      .catch(() => {
+        const masked = document.getElementById("profile-forgot-email-masked");
+        if (masked) masked.textContent = "ваш*****@почта.ru";
+        document.getElementById("btn-profile-forgot-done")?.focus();
+      });
+  }
+
+  function openResetPasswordModal() {
+    if (!profileModalOverlay || !profileModalResetPassword) return;
+    // TODO(backend): открывать эту модалку после проверки reset-token из ссылки письма.
+    profileModalChange?.classList.add("hidden");
+    profileModalChangePassword?.classList.add("hidden");
+    profileModalForgotPassword?.classList.add("hidden");
+    profileModalResetPassword.classList.remove("hidden");
+    profileModalOverlay.classList.remove("hidden");
+    profileModalOverlay.setAttribute("aria-hidden", "false");
+    const mini = document.getElementById("profile-modal-reset-password-msg");
+    if (mini) {
+      mini.textContent = "";
+      mini.className = "flash";
+    }
+    const form = document.getElementById("form-profile-reset-password");
+    if (form) form.reset();
+    document.getElementById("input-profile-reset-password-new")?.focus();
   }
 
   function openChangeNameModal() {
     closeProfileLookMenu();
     if (!profileModalOverlay || !profileModalChange) return;
+    profileModalResetPassword?.classList.add("hidden");
+    profileModalForgotPassword?.classList.add("hidden");
     profileModalChangePassword?.classList.add("hidden");
     profileModalChange.classList.remove("hidden");
     profileModalOverlay.classList.remove("hidden");
@@ -1033,6 +1122,8 @@
   function openChangePasswordModal() {
     if (!profileModalOverlay || !profileModalChangePassword) return;
     profileModalChange?.classList.add("hidden");
+    profileModalResetPassword?.classList.add("hidden");
+    profileModalForgotPassword?.classList.add("hidden");
     profileModalChangePassword.classList.remove("hidden");
     profileModalOverlay.classList.remove("hidden");
     profileModalOverlay.setAttribute("aria-hidden", "false");
@@ -1065,9 +1156,70 @@
     }
   });
 
+  document.getElementById("form-forgot-password")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("forgot-password-message");
+    const fd = new FormData(e.target);
+    const email = String(fd.get("email") || "").trim();
+    const basicOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    if (!email || !basicOk) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Введите корректный адрес электронной почты.";
+      }
+      return;
+    }
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    // TODO(backend): заменить локальный успех реальным POST /auth/password/forgot
+    // и показывать одинаковый ответ независимо от существования email.
+    const masked = document.getElementById("forgot-email-masked");
+    if (masked) masked.textContent = maskEmailHalf(email);
+    document.getElementById("forgot-password-step-form")?.classList.add("hidden");
+    document.getElementById("forgot-password-step-sent")?.classList.remove("hidden");
+  });
+
+  document.getElementById("btn-profile-forgot-password")?.addEventListener("click", () => {
+    openForgotPasswordFromProfileModal();
+  });
+
+  document.getElementById("btn-profile-forgot-done")?.addEventListener("click", closeProfileModals);
+
   document.getElementById("btn-profile-modal-cancel")?.addEventListener("click", closeProfileModals);
   document.getElementById("btn-profile-password-cancel")?.addEventListener("click", closeProfileModals);
+  document.getElementById("btn-profile-reset-password-cancel")?.addEventListener("click", closeProfileModals);
   document.getElementById("profile-modal-scrim")?.addEventListener("click", closeProfileModals);
+
+  document.getElementById("form-profile-reset-password")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("profile-modal-reset-password-msg");
+    const fd = new FormData(e.target);
+    const a = String(fd.get("new_password") || "");
+    const b = String(fd.get("new_password_confirm") || "");
+    if (a !== b) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Новый пароль и повтор не совпадают.";
+      }
+      return;
+    }
+    if (a.length < 8) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Пароль должен быть не короче 8 символов.";
+      }
+      return;
+    }
+    // TODO(backend): заменить заглушку реальным POST/PATCH reset-password
+    // с token/code из ссылки письма и новым паролем.
+    if (msg) {
+      msg.className = "flash flash-info";
+      msg.textContent =
+        "Интерфейс готов. Сохранение нового пароля по ссылке из письма заработает после подключения сервера восстановления.";
+    }
+  });
 
   document.getElementById("form-profile-change-username")?.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -1498,4 +1650,13 @@
 
   updateAuthNav();
   showView(readStoredView());
+  try {
+    const p = new URLSearchParams(window.location.search);
+    if (p.get("wc_l_reset") === "1") {
+      requestAnimationFrame(() => openResetPasswordModal());
+      const u = new URL(window.location.href);
+      u.searchParams.delete("wc_l_reset");
+      history.replaceState({}, "", u.pathname + u.search + u.hash);
+    }
+  } catch (_) {}
 })();
