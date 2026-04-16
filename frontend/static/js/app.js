@@ -1,7 +1,8 @@
 /**
  * WC-L — клиент API и навигация по разделам (прототип без фреймворка).
  *
- * Live Server (порт 5500/5501): запросы идут на тот же host, порт 8000 (uvicorn).
+ * Live Server (любой порт, в т.ч. 8000 в .vscode): API на тот же host, порт 8000 (uvicorn).
+ * Не держите Live Server и uvicorn на одном и том же порту — задайте window.WC_L_API_BASE.
  * Свой API: перед app.js задайте window.WC_L_API_BASE = "http://127.0.0.1:9000/api/v1";
  */
 (function () {
@@ -15,7 +16,7 @@
     const h = location.hostname;
     const isLocal = h === "localhost" || h === "127.0.0.1" || h === "[::1]";
     const port = location.port;
-    // Страница с uvicorn :8000 — API относительным путём; иначе Live Server/Vite на любом порту → бэкенд :8000.
+    // Тот же хост :8000 с uvicorn — API относительным путём; иной локальный порт (Live/Vite) → бэкенд :8000.
     if (isLocal && port === "8000") {
       return "/api/v1";
     }
