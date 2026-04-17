@@ -144,16 +144,18 @@ h6 {
 @keyframes fx-hero-title {
   0%,
   100% {
-    text-shadow:
-      0 0 28px var(--glow-gold),
-      0 0 48px rgba(201, 162, 39, 0.35);
-    filter: brightness(1);
+    filter: brightness(1)
+      /* свет сверху-слева — заметно сильнее */
+      drop-shadow(-16px -14px 26px rgba(195, 140, 88, 0.17))
+      /* низ-справа — тише и темнее */
+      drop-shadow(18px 20px 34px rgba(12, 6, 4, 0.24))
+      drop-shadow(6px 8px 22px rgba(55, 32, 18, 0.1));
   }
   50% {
-    text-shadow:
-      0 0 42px var(--glow-gold),
-      0 0 72px rgba(201, 162, 39, 0.5);
-    filter: brightness(1.06);
+    filter: brightness(1.016)
+      drop-shadow(-12px -18px 28px rgba(205, 150, 95, 0.19))
+      drop-shadow(14px 16px 36px rgba(10, 5, 4, 0.2))
+      drop-shadow(4px 4px 20px rgba(48, 28, 15, 0.09));
   }
 }
 
@@ -164,18 +166,6 @@ h6 {
   }
   50% {
     opacity: 1;
-  }
-}
-
-@keyframes fx-divider-pulse {
-  0%,
-  100% {
-    opacity: 0.4;
-    filter: drop-shadow(0 0 2px rgba(201, 162, 39, 0.35));
-  }
-  50% {
-    opacity: 0.95;
-    filter: drop-shadow(0 0 10px rgba(201, 162, 39, 0.65));
   }
 }
 
@@ -339,6 +329,59 @@ body::before {
   min-height: var(--chrome-bar-height);
   max-height: var(--chrome-bar-height);
   box-sizing: border-box;
+}
+
+.site-footer-reveal {
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Десктоп с мышью: футер утоплен, видна полоска; при наведении выезжает вверх */
+@media (hover: hover) and (pointer: fine) and (min-width: 721px) {
+  .site-footer-reveal {
+    flex: 0 0 0;
+    height: 0;
+    width: 100%;
+    overflow: visible;
+    position: relative;
+    z-index: 25;
+  }
+
+  .site-footer-reveal .site-footer {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    transform: translateY(calc(100% - 14px));
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.55);
+    will-change: transform;
+  }
+
+  .site-footer-reveal .site-footer:hover,
+  .site-footer-reveal .site-footer:focus-within {
+    transform: translateY(0);
+  }
+}
+
+/* Сенсор / без hover — футер всегда в потоке, не прячем */
+@media (hover: none) {
+  .site-footer-reveal {
+    flex: 0 0 auto !important;
+    height: auto !important;
+  }
+
+  .site-footer-reveal .site-footer {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+    will-change: auto !important;
+  }
 }
 
 .site-footer-plank {
@@ -872,7 +915,7 @@ a:hover {
   .btn-primary::before,
   .panel:not(.ip-box),
   .hero h1,
-  .dragon-divider,
+  .hero .hero-logo,
   .feature-icon,
   .ip-box,
   .profile-avatar-frame {
@@ -884,6 +927,18 @@ a:hover {
     transform-origin: right center;
     filter: drop-shadow(0 0 6px rgba(218, 165, 32, 0.4))
       drop-shadow(0 0 14px rgba(176, 130, 40, 0.24));
+  }
+
+  .hero .hero-logo {
+    filter: drop-shadow(-16px -14px 26px rgba(190, 135, 85, 0.16))
+      drop-shadow(18px 20px 34px rgba(12, 6, 4, 0.23))
+      drop-shadow(6px 8px 22px rgba(50, 28, 16, 0.09));
+  }
+
+  @media (hover: hover) and (pointer: fine) and (min-width: 721px) {
+    .site-footer-reveal .site-footer {
+      transition: transform 0.12s ease;
+    }
   }
 
   .feature-card:hover {
@@ -1009,7 +1064,7 @@ a:hover {
 /* ——— Герой ——— */
 .hero {
   text-align: center;
-  padding: 3rem 1rem 4rem;
+  padding: 8rem 1rem 5rem;
   position: relative;
 }
 
@@ -1024,39 +1079,101 @@ a:hover {
 
 .hero-inner {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.hero h1 {
-  font-size: clamp(1.75rem, 5vw, 2.75rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  color: var(--border-gold);
-  text-shadow: 0 0 40px var(--glow-gold);
-  margin: 0 0 1rem;
-  animation: fx-hero-title 5.5s ease-in-out infinite;
+.hero h1.hero-title {
+  position: relative;
+  z-index: 0;
+  margin: 0;
+  padding-top: 1.5rem;
+  line-height: 0;
+  font-size: 0;
+  overflow: visible;
 }
 
-.hero .subtitle {
-  font-size: 1.25rem;
-  color: var(--text-muted);
-  max-width: 36rem;
-  margin: 0 auto 2rem;
+.hero h1.hero-title::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -48%);
+  width: min(140%, 28rem);
+  height: min(85vw, 14rem);
+  max-height: 17rem;
+  background:
+    radial-gradient(
+      ellipse 125% 100% at 24% 32%,
+      rgba(220, 165, 105, 0.145) 0%,
+      rgba(120, 72, 38, 0.062) 38%,
+      transparent 62%
+    ),
+    radial-gradient(
+      ellipse 90% 100% at 82% 68%,
+      rgba(90, 52, 28, 0.072) 0%,
+      transparent 55%
+    );
+  filter: blur(52px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* затемнение справа-снизу: слева светлее, справа тусклее */
+.hero h1.hero-title::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -48%);
+  width: min(150%, 30rem);
+  height: min(92vw, 16rem);
+  max-height: 18rem;
+  background: linear-gradient(
+    118deg,
+    rgba(235, 185, 125, 0.085) 0%,
+    rgba(120, 75, 42, 0.048) 28%,
+    transparent 46%,
+    rgba(18, 10, 22, 0.16) 68%,
+    rgba(6, 3, 12, 0.28) 100%
+  );
+  filter: blur(40px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero .hero-logo {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: min(88vw, 320px);
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto;
+  animation: fx-hero-title 6.8s ease-in-out infinite;
 }
 
 .hero-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
+  flex-wrap: nowrap;
   justify-content: center;
   align-items: center;
-  padding-bottom: 14px;
+  gap: 1.15rem;
+  width: 100%;
+  max-width: min(100%, 52rem);
+  margin-top: 12rem;
+  padding: 0 0.25rem 1.25rem;
+  box-sizing: border-box;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
-.dragon-divider {
-  margin: 2rem auto;
-  max-width: 320px;
-  opacity: 0.6;
-  animation: fx-divider-pulse 3.8s ease-in-out infinite;
+.hero-actions .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 /* ——— Сетка карточек ——— */
@@ -2196,6 +2313,23 @@ label.admin-filter input {
 @media (max-width: 720px) {
   :root {
     --chrome-bar-padding-x: 12px;
+  }
+
+  .site-footer-reveal {
+    flex: 0 0 auto !important;
+    height: auto !important;
+    overflow: visible;
+  }
+
+  .site-footer-reveal .site-footer {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    transform: none !important;
+    box-shadow: none !important;
+    transition: none !important;
+    will-change: auto !important;
   }
 
   .site-footer {
