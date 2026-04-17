@@ -22,6 +22,8 @@ class User(Base):
     is_admin: Mapped[bool] = mapped_column(default=False, nullable=False)
     # Banned users cannot log in or use protected endpoints.
     is_banned: Mapped[bool] = mapped_column(default=False, nullable=False)
+    # Chosen profile avatar style (mc-heads / local asset id); None means default in the client.
+    mc_avatar_variant: Mapped[str | None] = mapped_column(String(64), nullable=True)
     # `created_at` is filled automatically when the row is first inserted.
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     # `updated_at` changes automatically whenever the row is edited.

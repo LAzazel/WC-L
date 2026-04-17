@@ -64,6 +64,7 @@ def test_register_login_me_flow() -> None:
         assert me_payload["email"] == email
         assert me_payload["is_admin"] is False
         assert me_payload["is_banned"] is False
+        assert me_payload.get("mc_avatar_variant") is None
 
 
 # This test proves the login endpoint rejects bad passwords.
@@ -270,5 +271,68 @@ def test_patch_username_rejects_reserved_admin_name() -> None:
         )
         assert r.status_code == 400
         assert r.json()["detail"] == "This username is reserved"
+
+
+def test_patch_mc_avatar_variant_persists() -> None:
+    with TestClient(app) as client:
+        suffix = uuid4().hex[:8]
+        username = f"av_{suffix}"
+        client.post(
+            "/api/v1/auth/register",
+            json={"username": username, "email": f"{username}@example.com", "password": "strongpassword123"},
+        )
+        token = _access_token_after_password_login(client, username, "strongpassword123")
+
+        r = client.patch(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"mc_avatar_variant": "pig"},
+        )
+        assert r.status_code == 200
+        assert r.json()["mc_avatar_variant"] == "pig"
+
+        me = client.get(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+        ).json()
+        assert me["mc_avatar_variant"] == "pig"
+
+
+def test_patch_mc_avatar_variant_rejects_unknown() -> None:
+    with TestClient(app) as client:
+        suffix = uuid4().hex[:8]
+        username = f"badav_{suffix}"
+        client.post(
+            "/api/v1/auth/register",
+            json={"username": username, "email": f"{username}@example.com", "password": "strongpassword123"},
+        )
+        token = _access_token_after_password_login(client, username, "strongpassword123")
+
+        r = client.patch(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+            json={"mc_avatar_variant": "not_a_real_variant"},
+        )
+        assert r.status_code == 400
+        assert r.json()["detail"] == "Invalid avatar variant"
+
+
+def test_patch_me_requires_at_least_one_field() -> None:
+    with TestClient(app) as client:
+        suffix = uuid4().hex[:8]
+        username = f"empty_{suffix}"
+        client.post(
+            "/api/v1/auth/register",
+            json={"username": username, "email": f"{username}@example.com", "password": "strongpassword123"},
+        )
+        token = _access_token_after_password_login(client, username, "strongpassword123")
+
+        r = client.patch(
+            "/api/v1/auth/me",
+            headers={"Authorization": f"Bearer {token}"},
+            json={},
+        )
+        assert r.status_code == 400
+        assert r.json()["detail"] == "No fields to update"
 
 

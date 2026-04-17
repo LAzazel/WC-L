@@ -21,7 +21,7 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="static/css/fantasy.css?v=142" />
+    <link rel="stylesheet" href="static/css/fantasy.css?v=152" />
   </head>
   <body data-view="home">
     <div class="site-page">
@@ -306,33 +306,41 @@
 
       <!-- Админ -->
       <section id="view-admin" class="view">
-        <div class="panel">
-          <h2>Зал хранителей</h2>
-          <p>Список воинов королевства. Действия уходят в API: бан, снятие бана, выдача и отзыв прав админа.</p>
-          <div id="admin-message" class="flash" role="status"></div>
-          <div class="admin-toolbar">
-            <span class="admin-toolbar-label">Кого показать:</span>
-            <label class="admin-filter"><input type="radio" name="admin-filter" value="all" checked /> Всех</label>
-            <label class="admin-filter"><input type="radio" name="admin-filter" value="admins" /> Только хранителей</label>
-            <label class="admin-filter"><input type="radio" name="admin-filter" value="players" /> Только игроков</label>
-            <button type="button" class="btn btn-small btn-primary" id="btn-admin-refresh">Обновить список</button>
+        <div class="panel panel-staff-hub">
+          <div class="staff-hub-head">
+            <h2>Зал хранителей</h2>
+            <p class="staff-hub-lead">
+              Список учётных записей. Слева поиск и игроки; справа карточка выбранного игрока и действия.
+            </p>
+            <div id="admin-message" class="flash" role="status"></div>
           </div>
-          <div class="table-wrap">
-            <table class="data-table" id="admin-users">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Имя</th>
-                  <th>Email</th>
-                  <th>Админ</th>
-                  <th>Бан</th>
-                  <th>Действия</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div class="staff-hub-grid">
+            <aside class="staff-hub-sidebar" aria-label="Список игроков">
+              <div class="staff-hub-search-row">
+                <label class="staff-search-label" for="admin-user-search">Поиск</label>
+                <input
+                  type="search"
+                  id="admin-user-search"
+                  class="staff-hub-search"
+                  placeholder="Имя, email или ID…"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="staff-hub-sidebar-divider" aria-hidden="true"></div>
+              <ul id="admin-user-list" class="staff-user-list" role="listbox" aria-label="Игроки королевства"></ul>
+            </aside>
+            <div class="staff-hub-detail-wrap">
+              <div id="admin-user-detail" class="staff-user-detail" data-staff-detail="admin">
+                <div class="staff-user-detail-empty">
+                  <p>Выберите игрока в списке слева — здесь откроется полный профиль и действия.</p>
+                </div>
+              </div>
+            </div>
           </div>
-          <button type="button" class="btn" data-nav="profile" style="margin-top: 1rem">Назад в кабинет</button>
+          <div class="staff-hub-footer-actions">
+            <button type="button" class="btn" data-nav="profile">Назад в кабинет</button>
+          </div>
         </div>
       </section>
 
@@ -403,19 +411,42 @@
       </section>
 
       <section id="view-processing" class="view">
-        <div class="panel">
-          <h2>Обработка</h2>
-          <p>
-            Здесь администраторы позже будут читать заявки на сотрудничество и связываться с людьми. Пока это только
-            пустая фронтенд-заглушка.
-          </p>
-          <div class="processing-placeholder">
-            <div class="processing-placeholder-card">
-              <h3>Заявок пока нет</h3>
-              <p>После подключения бэкенда сюда будут попадать письма и анкеты из раздела «Сотрудничество».</p>
+        <div class="panel panel-staff-hub">
+          <div class="staff-hub-head">
+            <h2>Обработка</h2>
+            <p class="staff-hub-lead">
+              Тот же интерфейс, что и в зале хранителей: поиск, список и карточка игрока. Заявки из «Сотрудничества»
+              подключатся к списку позже — сейчас для проверки UI показываются учётные записи с сервера.
+            </p>
+            <div id="processing-message" class="flash" role="status"></div>
+          </div>
+          <div class="staff-hub-grid">
+            <aside class="staff-hub-sidebar" aria-label="Список для обработки">
+              <div class="staff-hub-search-row">
+                <label class="staff-search-label" for="processing-user-search">Поиск</label>
+                <input
+                  type="search"
+                  id="processing-user-search"
+                  class="staff-hub-search"
+                  placeholder="Имя, email или ID…"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+              </div>
+              <div class="staff-hub-sidebar-divider" aria-hidden="true"></div>
+              <ul id="processing-user-list" class="staff-user-list" role="listbox" aria-label="Записи"></ul>
+            </aside>
+            <div class="staff-hub-detail-wrap">
+              <div id="processing-user-detail" class="staff-user-detail" data-staff-detail="processing">
+                <div class="staff-user-detail-empty">
+                  <p>Выберите запись слева — здесь будет полный профиль и действия.</p>
+                </div>
+              </div>
             </div>
           </div>
-          <button type="button" class="btn" data-nav="profile" style="margin-top: 1rem">Назад в кабинет</button>
+          <div class="staff-hub-footer-actions">
+            <button type="button" class="btn" data-nav="profile">Назад в кабинет</button>
+          </div>
         </div>
       </section>
     </main>
@@ -648,6 +679,13 @@
       </div>
     </div>
 
-    <script src="static/js/app.js?v=63" defer></script>
+    <script>
+      // Если вход пишет «Сервер не отвечает»: в корне проекта выполните
+      //   uvicorn app.main:app --reload
+      // и откройте в браузере http://127.0.0.1:8000/ (не file:// и не без запущенного uvicorn).
+      // Другой порт/хост API — раскомментируйте и поправьте:
+      // window.WC_L_API_BASE = "http://127.0.0.1:8000/api/v1";
+    </script>
+    <script src="static/js/app.js?v=68" defer></script>
   </body>
 </html>

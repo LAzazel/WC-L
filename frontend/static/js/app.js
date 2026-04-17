@@ -125,11 +125,14 @@
   }
 
   function apiUnreachableMessage() {
+    if (typeof location !== "undefined" && location.protocol === "file:") {
+      return "Откройте сайт по адресу http://127.0.0.1:8000/ (не двойной клик по index.html). Сначала в терминале: uvicorn app.main:app --reload";
+    }
     if (API.startsWith("http://") || API.startsWith("https://")) {
       const u = new URL(API);
-      return `Не удаётся связаться с API (${u.host}). Запустите бэкенд: uvicorn на порту 8000 и откройте страницу с того же компьютера.`;
+      return `Сервер не отвечает (${u.host}). В корне проекта: uvicorn app.main:app --reload — затем страница http://127.0.0.1:8000/ Если API на другом порту — задайте window.WC_L_API_BASE до загрузки app.js.`;
     }
-    return "Не удаётся связаться с API. Запустите сервер (uvicorn) и откройте сайт с того же хоста.";
+    return "Сервер не отвечает. Запустите: uvicorn app.main:app --reload и откройте http://127.0.0.1:8000/";
   }
 
   async function apiFetch(path, options = {}) {
@@ -237,21 +240,203 @@
     form?.reset();
   }
 
-  async function loadProcessingStub() {
-    const token = getToken();
-    const host = document.getElementById("view-processing");
-    if (!host) return;
-    if (!token) {
+  const staffState = {
+    cache: { admin: null, processing: null },
+    selectedId: { admin: null, processing: null },
+    myId: null,
+  };
+
+  const STAFF_SELECTORS = {
+    admin: {
+      list: "admin-user-list",
+      detail: "admin-user-detail",
+      search: "admin-user-search",
+      msg: "admin-message",
+    },
+    processing: {
+      list: "processing-user-list",
+      detail: "processing-user-detail",
+      search: "processing-user-search",
+      msg: "processing-message",
+    },
+  };
+
+  function getStaffEls(mode) {
+    const s = STAFF_SELECTORS[mode];
+    if (!s) return null;
+    return {
+      list: document.getElementById(s.list),
+      detail: document.getElementById(s.detail),
+      search: document.getElementById(s.search),
+      msg: document.getElementById(s.msg),
+    };
+  }
+
+  function userMatchesStaffQuery(u, q) {
+    const s = (q || "").trim().toLowerCase();
+    if (!s) return true;
+    return (
+      (u.username && u.username.toLowerCase().includes(s)) ||
+      (u.email && String(u.email).toLowerCase().includes(s)) ||
+      String(u.id).includes(s)
+    );
+  }
+
+  function syncStaffListAndDetail(mode) {
+    const users = staffState.cache[mode];
+    const els = getStaffEls(mode);
+    if (!els || !els.list || !els.detail) return;
+    if (!users) return;
+    const q = els.search ? els.search.value : "";
+    const filtered = users.filter((u) => userMatchesStaffQuery(u, q));
+    const sel = staffState.selectedId[mode];
+    if (sel != null && !filtered.some((u) => u.id === sel)) {
+      staffState.selectedId[mode] = null;
+    }
+    renderStaffUserList(mode, users, q);
+    const selId = staffState.selectedId[mode];
+    const u = selId != null ? users.find((x) => x.id === selId) : null;
+    renderStaffUserDetail(mode, u, staffState.myId);
+  }
+
+  function renderStaffUserList(mode, users, query) {
+    const els = getStaffEls(mode);
+    if (!els || !els.list) return;
+    const filtered = users.filter((u) => userMatchesStaffQuery(u, query));
+    const sel = staffState.selectedId[mode];
+    els.list.innerHTML = "";
+    filtered.forEach((u) => {
+      const li = document.createElement("li");
+      li.setAttribute("role", "option");
+      const initials = escapeHtml(profileInitials(u.username));
+      const hue = profileHue(u.username);
+      const variantId = resolveMcVariantForUser(u);
+      const chain = avatarUrlChain(u.username, variantId, 48, u.id);
+      const avSrc = chain[0] || "";
+      const isSel = sel === u.id;
+      const imgOrPh = avSrc
+        ? `<img src="${escapeHtml(avSrc)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
+        : `<span class="staff-user-item-fallback">${initials}</span>`;
+      li.innerHTML = `
+        <button type="button" class="staff-user-item${isSel ? " is-selected" : ""}" data-staff-pick="${mode}" data-user-id="${u.id}">
+          <div class="staff-user-item-avatar" style="--avatar-hue:${hue}">
+            ${imgOrPh}
+          </div>
+          <span class="staff-user-item-text">
+            <span class="staff-user-item-name">${escapeHtml(u.username)}</span>
+            <span class="staff-user-item-sub">#${u.id} · ${escapeHtml(u.email || "—")}</span>
+          </span>
+        </button>
+      `;
+      els.list.appendChild(li);
+    });
+  }
+
+  function renderStaffUserDetail(mode, u, myId) {
+    const els = getStaffEls(mode);
+    if (!els || !els.detail) return;
+    if (!u) {
+      els.detail.innerHTML = `<div class="staff-user-detail-empty"><p>Выберите игрока в списке слева.</p></div>`;
+      return;
+    }
+    const isSelf = u.id === myId;
+    const guardianBadge = u.is_admin
+      ? '<span class="profile-badge profile-badge-guardian">Хранитель</span>'
+      : '<span class="profile-badge">Игрок</span>';
+    const banBadge = u.is_banned
+      ? '<span class="profile-badge profile-badge-exile">Изгнан</span>'
+      : '<span class="profile-badge profile-badge-warden">В цитадели</span>';
+
+    const initials = escapeHtml(profileInitials(u.username));
+    const hue = profileHue(u.username);
+    const variantId = resolveMcVariantForUser(u);
+    const chain = avatarUrlChain(u.username, variantId, MC_HEAD_MAIN, u.id);
+    const avSrc = chain[0] || "";
+
+    let actionsHtml = "";
+    if (isSelf) {
+      actionsHtml = '<p class="staff-detail-self-note">Это вы — действия с собой недоступны.</p>';
+    } else {
+      const banBtn = u.is_banned
+        ? `<button type="button" class="btn btn-small" data-staff-act="ban" data-staff-mode="${mode}" data-user-id="${u.id}" data-to="false">Разбан</button>`
+        : `<button type="button" class="btn btn-small btn-danger" data-staff-act="ban" data-staff-mode="${mode}" data-user-id="${u.id}" data-to="true">Бан</button>`;
+      const admBtn = u.is_admin
+        ? `<button type="button" class="btn btn-small" data-staff-act="admin" data-staff-mode="${mode}" data-user-id="${u.id}" data-to="false">Снять админа</button>`
+        : `<button type="button" class="btn btn-small btn-primary" data-staff-act="admin" data-staff-mode="${mode}" data-user-id="${u.id}" data-to="true">Сделать админом</button>`;
+      actionsHtml = `<div class="staff-detail-actions-inner">
+        ${banBtn}
+        ${admBtn}
+        <button type="button" class="btn btn-small btn-ghost" disabled title="Скоро">Метки</button>
+      </div>`;
+    }
+
+    els.detail.innerHTML = `
+      <div class="staff-detail-card">
+        <div class="staff-detail-top">
+          <div class="staff-detail-avatar-wrap">
+            <div class="profile-avatar-frame staff-detail-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue:${hue}">
+              <div class="profile-avatar-inner">
+                ${avSrc ? `<img class="profile-avatar-img" src="${escapeHtml(avSrc)}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />` : ""}
+                <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
+              </div>
+            </div>
+          </div>
+          <div class="staff-detail-heading">
+            <h3 class="staff-detail-name">${escapeHtml(u.username)}</h3>
+          </div>
+        </div>
+        <dl class="staff-detail-dl">
+          <div><dt>ID</dt><dd>${u.id}</dd></div>
+          <div><dt>Email</dt><dd>${escapeHtml(u.email || "—")}</dd></div>
+        </dl>
+        <div class="staff-detail-badges-wrap" aria-labelledby="staff-badges-h-${mode}">
+          <h4 id="staff-badges-h-${mode}" class="staff-detail-badges-title">Метки</h4>
+          <div class="profile-hero-badges" aria-label="Роль и статус">${guardianBadge}${banBadge}</div>
+        </div>
+        <div class="staff-detail-actions">${actionsHtml}</div>
+      </div>
+    `;
+    const card = els.detail.querySelector(".staff-detail-card");
+    if (card && avSrc) {
+      card.dataset.profileUserId = String(u.id);
+      bindProfileAvatarImage(card, u.username, variantId);
+    }
+  }
+
+  async function loadStaffUsers(mode, opts) {
+    const keepSelection = opts && opts.keepSelection;
+    const els = getStaffEls(mode);
+    if (!els || !els.list) return;
+    if (els.msg) {
+      els.msg.textContent = "";
+      els.msg.className = "flash";
+    }
+    if (!getToken()) {
       showView("login");
       return;
     }
     try {
       const me = await fetchAuthMeCached();
-      if (!me || !me.is_admin) {
-        showView("profile");
+      if (!me) {
+        showView("login");
+        return;
       }
-    } catch (_) {
-      showView("login");
+      if (!me.is_admin) {
+        showView("profile");
+        return;
+      }
+      staffState.myId = me.id;
+      const users = await apiFetch("/admin/users");
+      staffState.cache[mode] = users;
+      if (!keepSelection) {
+        staffState.selectedId[mode] = null;
+      }
+      syncStaffListAndDetail(mode);
+    } catch (err) {
+      if (els.msg) {
+        els.msg.classList.add("flash-error");
+        els.msg.textContent = err.message;
+      }
     }
   }
 
@@ -267,10 +452,10 @@
       btn.classList.toggle("is-active", btn.getAttribute("data-nav") === name);
     });
     if (name === "profile") loadProfile();
-    if (name === "admin") loadAdminUsers();
+    if (name === "admin") loadStaffUsers("admin");
     if (name === "forgot-password") resetForgotPasswordUi();
     if (name === "cooperation") resetCooperationUi();
-    if (name === "processing") loadProcessingStub();
+    if (name === "processing") loadStaffUsers("processing");
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     requestAnimationFrame(() => document.dispatchEvent(new CustomEvent("wc-l-layout-refresh")));
   }
@@ -331,17 +516,7 @@
         submitBtn.textContent = "Входим…";
       }
       try {
-        const res = await fetch(API + "/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ login, password }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
-          throw new Error(
-            typeof data.detail === "string" ? data.detail : data.detail?.[0]?.msg || "Неверный логин или пароль"
-          );
-        }
+        const data = await apiFetch("/auth/login", { method: "POST", body: { login, password } });
         if (!data.access_token) {
           throw new Error("Сервер не вернул токен входа.");
         }
@@ -351,7 +526,9 @@
         showView("profile");
       } catch (err) {
         msg.classList.add("flash-error");
-        msg.textContent = err.message;
+        let text = err && err.message ? String(err.message) : "Ошибка входа";
+        if (text === "Invalid credentials") text = "Неверный логин или пароль.";
+        msg.textContent = text;
       } finally {
         if (submitBtn) {
           submitBtn.disabled = false;
@@ -649,6 +826,24 @@
     writeMcAvatarMap(map);
   }
 
+  /** Вариант с сервера (/me, /admin/users) или из localStorage (до синхронизации). */
+  function resolveMcVariantForUser(u) {
+    if (!u || u.id == null) return DEFAULT_MC_AVATAR_VARIANT;
+    const fromApi = u.mc_avatar_variant;
+    if (fromApi && MC_AVATAR_VARIANTS.some((v) => v.id === fromApi)) {
+      return fromApi;
+    }
+    return getStoredMcVariant(u.id);
+  }
+
+  function persistMcAvatarVariantToServer(userId, variantId) {
+    return apiFetch("/auth/me", { method: "PATCH", body: { mc_avatar_variant: variantId } })
+      .then(() => {
+        invalidateAuthMeCache();
+      })
+      .catch(() => {});
+  }
+
   function minecraftValidUsername(username) {
     return /^[a-zA-Z0-9_]{3,16}$/.test(String(username).trim());
   }
@@ -829,6 +1024,7 @@
       const variantId = item.getAttribute("data-mc-variant");
       if (!variantId || !MC_AVATAR_VARIANTS.some((v) => v.id === variantId)) return;
       setStoredMcVariant(Number(userId), variantId);
+      void persistMcAvatarVariantToServer(Number(userId), variantId);
       setMainProfileAvatar(root, username, variantId);
       root.querySelectorAll("[data-mc-variant]").forEach((el) => {
         el.classList.toggle("is-selected", el.getAttribute("data-mc-variant") === variantId);
@@ -902,7 +1098,8 @@
         showView("login");
         return;
       }
-      const variantId = getStoredMcVariant(me.id);
+      const variantId = resolveMcVariantForUser(me);
+      setStoredMcVariant(me.id, variantId);
       const profileFrameId = getStoredProfileFrame(me.id);
       const hue = profileHue(me.username);
       const initials = escapeHtml(profileInitials(me.username));
@@ -936,10 +1133,12 @@
                 </div>
               </div>
               <div class="profile-top-main">
-                <div class="profile-hero-name-row">
+                <div class="profile-hero-head-row">
                   <h3 class="profile-hero-name">${escapeHtml(me.username)}</h3>
+                  <div class="profile-hero-badges profile-hero-badges--top" aria-label="Роль и статус">
+                    ${guardianBadge}${banBadge}
+                  </div>
                 </div>
-                <div class="profile-hero-badges">${guardianBadge}${banBadge}</div>
                 <div class="profile-hero-look-wrap">
                   <div class="profile-hero-look-actions">
                     <button type="button" class="btn" id="profile-look-edit-btn" aria-expanded="false" aria-controls="profile-look-menu" aria-haspopup="true">Аватар</button>
@@ -970,95 +1169,40 @@
     }
   }
 
-  function adminUsersQuery() {
-    const r = document.querySelector('input[name="admin-filter"]:checked');
-    if (!r) return "";
-    if (r.value === "admins") return "?is_admin=true";
-    if (r.value === "players") return "?is_admin=false";
-    return "";
-  }
-
-  async function loadAdminUsers() {
-    const tbody = document.querySelector("#admin-users tbody");
-    const msg = document.getElementById("admin-message");
-    if (!tbody) return;
-    tbody.innerHTML = "";
-    if (msg) {
-      msg.textContent = "";
-      msg.className = "flash";
-    }
-    if (!getToken()) {
-      showView("login");
-      return;
-    }
-    try {
-      const me = await fetchAuthMeCached();
-      if (!me) {
-        showView("login");
-        return;
-      }
-      const myId = me.id;
-      const users = await apiFetch("/admin/users" + adminUsersQuery());
-      users.forEach((u) => {
-        const tr = document.createElement("tr");
-        const isSelf = u.id === myId;
-        let actionsHtml;
-        if (isSelf) {
-          actionsHtml = '<span style="color:var(--text-muted);font-size:0.9rem">Это вы</span>';
-        } else {
-          const banBtn = u.is_banned
-            ? `<button type="button" class="btn btn-small" data-act="ban" data-id="${u.id}" data-to="false">Снять бан</button>`
-            : `<button type="button" class="btn btn-small btn-danger" data-act="ban" data-id="${u.id}" data-to="true">Бан</button>`;
-          const admBtn = u.is_admin
-            ? `<button type="button" class="btn btn-small" data-act="admin" data-id="${u.id}" data-to="false">Снять админа</button>`
-            : `<button type="button" class="btn btn-small btn-primary" data-act="admin" data-id="${u.id}" data-to="true">Сделать админом</button>`;
-          actionsHtml = `<div class="admin-actions-inner">${banBtn}${admBtn}</div>`;
-        }
-        tr.innerHTML = `
-          <td>${u.id}</td>
-          <td>${escapeHtml(u.username)}</td>
-          <td>${escapeHtml(u.email)}</td>
-          <td><span class="badge ${u.is_admin ? "badge-yes" : "badge-no"}">${u.is_admin ? "Да" : "Нет"}</span></td>
-          <td><span class="badge ${u.is_banned ? "badge-yes" : "badge-no"}">${u.is_banned ? "Да" : "Нет"}</span></td>
-          <td class="admin-actions">${actionsHtml}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    } catch (err) {
-      if (msg) {
-        msg.classList.add("flash-error");
-        msg.textContent = err.message;
-      }
-    }
-  }
-
-  document.querySelectorAll('input[name="admin-filter"]').forEach((inp) => {
-    inp.addEventListener("change", () => {
-      if (views.admin && views.admin.classList.contains("is-visible")) loadAdminUsers();
-    });
+  document.addEventListener("click", (e) => {
+    const pick = e.target.closest("[data-staff-pick]");
+    if (!pick) return;
+    const mode = pick.getAttribute("data-staff-pick");
+    if (mode !== "admin" && mode !== "processing") return;
+    const id = Number(pick.getAttribute("data-user-id"), 10);
+    staffState.selectedId[mode] = id;
+    syncStaffListAndDetail(mode);
   });
 
-  document.getElementById("btn-admin-refresh")?.addEventListener("click", () => loadAdminUsers());
-
-  document.querySelector("#admin-users tbody")?.addEventListener("click", async (e) => {
-    const btn = e.target.closest("button[data-act]");
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-staff-act]");
     if (!btn) return;
-    const act = btn.getAttribute("data-act");
-    const id = Number(btn.getAttribute("data-id"), 10);
+    const act = btn.getAttribute("data-staff-act");
+    const mode = btn.getAttribute("data-staff-mode");
+    const id = Number(btn.getAttribute("data-user-id"), 10);
     const toTrue = btn.getAttribute("data-to") === "true";
-    const msg = document.getElementById("admin-message");
+    if (!mode || (mode !== "admin" && mode !== "processing")) return;
+    const els = getStaffEls(mode);
+    const msg = els && els.msg;
     btn.disabled = true;
     try {
       if (act === "ban") {
         await apiFetch(`/admin/users/${id}/ban`, { method: "PATCH", body: { is_banned: toTrue } });
       } else if (act === "admin") {
         await apiFetch(`/admin/users/${id}/admin`, { method: "PATCH", body: { is_admin: toTrue } });
+      } else {
+        return;
       }
       if (msg) {
         msg.className = "flash flash-success";
         msg.textContent = "Сохранено.";
       }
-      await loadAdminUsers();
+      await loadStaffUsers(mode, { keepSelection: true });
       updateAuthNav();
     } catch (err) {
       if (msg) {
@@ -1068,6 +1212,11 @@
     } finally {
       btn.disabled = false;
     }
+  });
+
+  ["admin", "processing"].forEach((mode) => {
+    const els = getStaffEls(mode);
+    els.search?.addEventListener("input", () => syncStaffListAndDetail(mode));
   });
 
   function escapeHtml(s) {

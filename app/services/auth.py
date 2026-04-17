@@ -2,9 +2,10 @@ from sqlalchemy import or_, select
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.mc_avatar import ALLOWED_MC_AVATAR_VARIANTS
 from app.core.security import create_access_token, hash_password, verify_password
 from app.models.user import User
-from app.schemas.auth import UserCreate
+from app.schemas.auth import UserCreate, UserSelfUpdate
 
 settings = get_settings()
 
@@ -59,18 +60,28 @@ def build_access_token_for_user(user: User) -> str:
     return create_access_token(subject=str(user.id))
 
 
-def update_own_username(db: Session, user: User, new_username: str) -> User:
-    new_username = new_username.strip()
-    if len(new_username) < 3:
-        raise AuthError("Username must be at least 3 characters")
-    if new_username == user.username:
-        return user
-    if new_username == settings.admin_username:
-        raise AuthError("This username is reserved")
-    taken = db.scalar(select(User).where(User.username == new_username))
-    if taken is not None and taken.id != user.id:
-        raise AuthError("Username already taken")
-    user.username = new_username
+def update_self_profile(db: Session, user: User, data: UserSelfUpdate) -> User:
+    if data.username is None and data.mc_avatar_variant is None:
+        raise AuthError("No fields to update")
+
+    if data.username is not None:
+        new_username = data.username.strip()
+        if len(new_username) < 3:
+            raise AuthError("Username must be at least 3 characters")
+        if new_username != user.username:
+            if new_username == settings.admin_username:
+                raise AuthError("This username is reserved")
+            taken = db.scalar(select(User).where(User.username == new_username))
+            if taken is not None and taken.id != user.id:
+                raise AuthError("Username already taken")
+            user.username = new_username
+
+    if data.mc_avatar_variant is not None:
+        variant = data.mc_avatar_variant.strip()
+        if variant not in ALLOWED_MC_AVATAR_VARIANTS:
+            raise AuthError("Invalid avatar variant")
+        user.mc_avatar_variant = variant
+
     db.commit()
     db.refresh(user)
     return user

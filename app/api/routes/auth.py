@@ -10,7 +10,7 @@ from app.schemas.auth import (
     UserCreate,
     UserLogin,
     UserRead,
-    UserSelfUsername,
+    UserSelfUpdate,
 )
 from app.services.auth import (
     AuthError,
@@ -18,7 +18,7 @@ from app.services.auth import (
     build_access_token_for_user,
     change_user_password,
     create_user,
-    update_own_username,
+    update_self_profile,
 )
 
 # Group all authentication-related endpoints under `/auth`.
@@ -53,12 +53,12 @@ def me(current_user: User = Depends(get_current_user)) -> UserRead:
 # Update the authenticated user's username (display / login name).
 @router.patch("/me", response_model=UserRead)
 def patch_me(
-    data: UserSelfUsername,
+    data: UserSelfUpdate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> UserRead:
     try:
-        return update_own_username(db, current_user, data.username)
+        return update_self_profile(db, current_user, data)
     except AuthError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 

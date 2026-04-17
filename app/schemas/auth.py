@@ -22,6 +22,7 @@ class UserRead(BaseModel):
     is_admin: bool
     # Banned is the only public account restriction flag now.
     is_banned: bool
+    mc_avatar_variant: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -38,6 +39,7 @@ class PasswordChange(BaseModel):
     new_password: str = Field(min_length=8, max_length=128)
 
 
-# Payload for changing the public username (login name) while authenticated.
-class UserSelfUsername(BaseModel):
-    username: str = Field(min_length=3, max_length=50)
+# Payload for PATCH /me: any subset of profile fields.
+class UserSelfUpdate(BaseModel):
+    username: str | None = Field(default=None, min_length=3, max_length=50)
+    mc_avatar_variant: str | None = Field(default=None, max_length=64)
