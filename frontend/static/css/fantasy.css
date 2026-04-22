@@ -1,4 +1,4 @@
-/* WC-L — VCR OSD Mono + fallback для кириллицы. */
+/* WC-L — VCR OSD Mono + Crimson Text (читаемая кириллица), запасные. */
 
 /* Montserrat — локально: static/fonts/montserrat/*.ttf */
 @font-face {
@@ -75,8 +75,21 @@
 
 :root {
   /* Единственная высота полосы хедера и футера (px); оба блока совпадают пиксель в пиксель */
-  --chrome-bar-height: 72px;
-  --chrome-bar-padding-x: 16px;
+  --chrome-bar-height: 4.5rem;
+  --chrome-bar-padding-x: 1rem;
+  /* Вертикальный ритм между блоками внутри страницы */
+  --section-gap: 1.5rem;
+  --block-gap: 1.125rem;
+  --brand-logo-size: 3.5rem;
+  --nav-head-size: 2rem;
+  /* Responsive layout tokens (mobile-first breakpoints) */
+  --bp-tablet-min: 768px;
+  --bp-desktop-min: 1024px;
+  --layout-main-max: 1180px;
+  /* Мобильное меню: панель выше затемнения; рельс с гамбургером — выше панели */
+  --nav-mobile-scrim-z: 40;
+  --nav-mobile-panel-z: 50;
+  --nav-mobile-header-rail-z: 60;
   --bg-deep: #0d0a12;
   --bg-stone: #1a1520;
   --bg-card: rgba(28, 22, 38, 0.92);
@@ -256,11 +269,18 @@ html {
   scroll-behavior: auto;
   background-color: var(--bg-deep);
   height: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  /* Липкая шапка: якоря и scroll не прячутся под хедер */
+  scroll-padding-top: var(--chrome-bar-height);
 }
 
 body {
   margin: 0;
+  max-width: 100%;
+  overflow-x: hidden;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   font-family: var(--font-body);
@@ -269,15 +289,19 @@ body {
   line-height: 1.5;
   color: var(--text-parchment);
   background-color: var(--bg-deep);
+  /* Слой 1: затемнение поверх фото для читаемости текста; слой 2: dungeon — cover без растяжения пропорций */
   background-image:
-    linear-gradient(180deg, rgba(8, 6, 14, 0.72) 0%, rgba(10, 8, 18, 0.58) 45%, rgba(6, 5, 12, 0.68) 100%),
+    linear-gradient(180deg, rgba(8, 6, 14, 0.82) 0%, rgba(10, 8, 18, 0.72) 42%, rgba(6, 5, 12, 0.88) 100%),
     url("../img/bg-dungeon.jpeg"),
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cpath fill='%23ffffff' fill-opacity='0.02' d='M0 0h60v60H0zm60 60h60v60H60z'/%3E%3C/svg%3E");
   background-size:
-    100% 100%,
+    cover,
     cover,
     120px 120px;
-  background-position: 0 0, center center, 0 0;
+  background-position:
+    center,
+    center calc(50% + 100px),
+    0 0;
   background-repeat: no-repeat, no-repeat, repeat;
   background-attachment: scroll, scroll, scroll;
   position: relative;
@@ -293,12 +317,14 @@ body::before {
   bottom: 0;
   width: 100%;
   min-height: 100%;
+  min-height: 100dvh;
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 90% 55% at 50% -5%, rgba(130, 90, 160, 0.12), transparent 58%),
-    radial-gradient(ellipse 55% 40% at 95% 75%, rgba(45, 107, 78, 0.08), transparent 55%),
-    radial-gradient(ellipse 50% 35% at 5% 60%, rgba(139, 41, 66, 0.05), transparent 50%);
+    radial-gradient(ellipse 90% 55% at 50% -5%, rgba(130, 90, 160, 0.1), transparent 58%),
+    radial-gradient(ellipse 55% 40% at 95% 75%, rgba(45, 107, 78, 0.06), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 5% 60%, rgba(139, 41, 66, 0.04), transparent 50%),
+    linear-gradient(180deg, rgba(4, 3, 10, 0.25) 0%, transparent 35%, rgba(4, 3, 10, 0.35) 100%);
   animation: fx-ambient 14s ease-in-out infinite;
 }
 
@@ -311,10 +337,14 @@ body::before {
   display: flex;
   flex-direction: column;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   min-height: 100vh;
   min-height: 100dvh;
   position: relative;
   z-index: 3;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
 .site-footer {
@@ -336,54 +366,7 @@ body::before {
   display: block;
 }
 
-/* Десктоп с мышью: футер утоплен, видна полоска; при наведении выезжает вверх */
-@media (hover: hover) and (pointer: fine) and (min-width: 721px) {
-  .site-footer-reveal {
-    flex: 0 0 0;
-    height: 0;
-    width: 100%;
-    overflow: visible;
-    position: relative;
-    z-index: 25;
-  }
-
-  .site-footer-reveal .site-footer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: 0;
-    transform: translateY(calc(100% - 14px));
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.55);
-    will-change: transform;
-  }
-
-  .site-footer-reveal .site-footer:hover,
-  .site-footer-reveal .site-footer:focus-within {
-    transform: translateY(0);
-  }
-}
-
-/* Сенсор / без hover — футер всегда в потоке, не прячем */
-@media (hover: none) {
-  .site-footer-reveal {
-    flex: 0 0 auto !important;
-    height: auto !important;
-  }
-
-  .site-footer-reveal .site-footer {
-    position: relative !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-    box-shadow: none !important;
-    transition: none !important;
-    will-change: auto !important;
-  }
-}
-
+/* Футер всегда в потоке страницы (без выезда / «утопления» на десктопе). */
 .site-footer-plank {
   height: var(--chrome-bar-height);
   min-height: var(--chrome-bar-height);
@@ -393,23 +376,29 @@ body::before {
   border-top: 1px solid var(--border-gold-dim);
   background: linear-gradient(0deg, rgba(13, 10, 18, 0.98), rgba(20, 16, 28, 0.95));
   overflow: hidden;
-  animation: fx-footer-glow 6s ease-in-out infinite;
+  box-shadow:
+    0 -2px 16px rgba(0, 0, 0, 0.48),
+    0 0 12px rgba(201, 162, 39, 0.08);
 }
 
 .site-footer-inner {
   height: 100%;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 1rem;
+  justify-content: space-between;
+  gap: 0.65rem 1rem;
 }
 
 .site-footer-center {
-  grid-column: 2;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: 0.85rem 1.1rem;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .site-footer-link {
@@ -430,11 +419,40 @@ body::before {
 }
 
 .site-footer-socials {
-  grid-column: 3;
-  justify-self: end;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 0.55rem;
+  flex: 0 0 auto;
+}
+
+@media (min-width: 768px) {
+  /* Три колонки: пустая 1fr | ссылки по центру экрана | соцсети справа в 1fr (симметрия с шапкой) */
+  .site-footer-inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 1rem;
+    row-gap: 0.65rem;
+    justify-content: unset;
+  }
+
+  .site-footer-center {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: center;
+    flex: unset;
+    justify-content: center;
+  }
+
+  .site-footer-socials {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    align-self: center;
+    justify-content: flex-end;
+  }
 }
 
 .visually-hidden {
@@ -449,27 +467,33 @@ body::before {
   border: 0;
 }
 
+/* Социконки — как нижние текстовые ссылки: без рамки и «монет», только пергамент → золото */
 .site-footer-social {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
+  padding: 0.25rem 0.35rem;
+  margin: 0;
   border: none;
+  border-radius: 0;
   background: transparent;
-  color: rgba(62, 47, 98, 0.54);
-  cursor: default;
-  opacity: 0.68;
+  box-shadow: none;
+  color: rgba(232, 220, 196, 0.62);
+  cursor: pointer;
   transition:
-    transform 0.15s ease,
-    color 0.15s ease,
-    opacity 0.15s ease;
+    color 0.2s ease,
+    filter 0.22s ease,
+    transform 0.15s ease;
 }
 
 .site-footer-social:hover {
-  color: rgba(92, 72, 144, 0.78);
-  opacity: 1;
+  color: var(--border-gold);
+  filter: drop-shadow(0 0 6px var(--glow-gold)) drop-shadow(0 0 14px rgba(201, 162, 39, 0.28));
+}
+
+.site-footer-social:focus-visible {
+  outline: 2px solid var(--border-gold-dim);
+  outline-offset: 3px;
 }
 
 .site-footer-social:active {
@@ -487,6 +511,36 @@ body::before {
 .site-footer-social-icon--tiktok {
   width: 20px;
   height: 20px;
+}
+
+.cooperation-panel.panel h2 {
+  margin-bottom: 0.65rem;
+}
+
+.cooperation-panel .cooperation-lead {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: rgba(232, 220, 196, 0.76);
+}
+
+.cooperation-panel #cooperation-message:empty {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+}
+
+.cooperation-panel #cooperation-message:not(:empty) {
+  margin-bottom: 0.5rem;
+}
+
+.cooperation-panel form .form-group {
+  margin-bottom: 0.45rem;
+}
+
+.cooperation-panel form .form-actions {
+  margin-top: 0.55rem;
 }
 
 /* ——— Фон: монеты (высота = блок body по контенту; без лишней прокрутки) ——— */
@@ -577,24 +631,67 @@ a:hover {
   top: 0;
   z-index: 100;
   flex-shrink: 0;
-  display: flex;
+  display: grid;
+  /* Симметричные боковые колонки — иначе «центр» смещается из‑за разной ширины лого и блока входа */
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 8px 10px;
+  column-gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: var(--chrome-bar-height);
   min-height: var(--chrome-bar-height);
   max-height: var(--chrome-bar-height);
   padding: 0 var(--chrome-bar-padding-x);
   box-sizing: border-box;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
   background: linear-gradient(180deg, rgba(13, 10, 18, 0.98), rgba(20, 16, 28, 0.95));
   border-bottom: 1px solid var(--border-gold-dim);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
   animation: fx-header-glow 6s ease-in-out infinite;
+}
+
+.site-header > .main-nav.main-nav--wynncraft {
+  grid-column: 2;
+  justify-self: center;
+}
+
+.site-header > .header-actions-rail {
+  grid-column: 3;
+  justify-self: end;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: max(15px, 1.25rem);
+  min-width: 0;
+}
+
+/* Планшет и десктоп: сетка лого | навигация | (вход + гамбургер) */
+@media (min-width: 768px) {
+  .site-header {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  }
+
+  .site-header > .brand,
+  .site-header > .main-nav,
+  .site-header > .header-actions-rail {
+    grid-area: auto;
+  }
+
+  .brand {
+    justify-self: start;
+  }
+
+  .site-header > .main-nav.main-nav--wynncraft {
+    justify-self: center;
+  }
+
+  .site-header > .header-actions-rail {
+    justify-self: end;
+  }
 }
 
 .brand {
@@ -611,13 +708,21 @@ a:hover {
   position: relative;
   z-index: 1;
   flex-shrink: 0;
+  justify-self: start;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.brand:focus-visible {
+  outline: 2px solid var(--border-gold-dim);
+  outline-offset: 3px;
+  border-radius: 12px;
 }
 
 /* В потоке 56×56; визуально ×2, якорь справа — высота хедера не растёт. */
 .brand-logo {
   flex-shrink: 0;
-  width: 56px;
-  height: 56px;
+  width: var(--brand-logo-size);
+  height: var(--brand-logo-size);
   margin-left: 3.25rem;
   object-fit: contain;
   display: block;
@@ -635,11 +740,94 @@ a:hover {
   color: var(--text-muted);
 }
 
+.nav-menu-toggle {
+  display: none;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border-gold-dim);
+  border-radius: 8px;
+  background: linear-gradient(165deg, rgba(48, 38, 58, 0.96) 0%, rgba(14, 11, 20, 0.98) 100%);
+  color: rgba(232, 220, 196, 0.92);
+  cursor: pointer;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 210, 140, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.35);
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.nav-menu-toggle:hover {
+  border-color: rgba(201, 162, 39, 0.55);
+  background: linear-gradient(165deg, rgba(58, 46, 72, 0.98) 0%, rgba(22, 18, 32, 0.99) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 220, 160, 0.16),
+    0 0 14px rgba(201, 162, 39, 0.18);
+}
+
+.nav-menu-toggle:focus-visible {
+  outline: 2px solid var(--border-gold);
+  outline-offset: 2px;
+}
+
+.nav-menu-toggle-bars {
+  position: relative;
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: currentColor;
+  border-radius: 1px;
+  box-shadow:
+    0 -7px 0 currentColor,
+    0 7px 0 currentColor;
+  transition: background 0.18s ease, box-shadow 0.18s ease;
+}
+
+.nav-menu-toggle-bars::before,
+.nav-menu-toggle-bars::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 22px;
+  height: 2px;
+  margin-top: -1px;
+  background: currentColor;
+  border-radius: 1px;
+  opacity: 0;
+  transition:
+    opacity 0.16s ease,
+    transform 0.18s ease;
+}
+
+body.nav-mobile-open .nav-menu-toggle-bars {
+  background: transparent;
+  box-shadow: none;
+}
+
+body.nav-mobile-open .nav-menu-toggle-bars::before,
+body.nav-mobile-open .nav-menu-toggle-bars::after {
+  opacity: 1;
+}
+
+body.nav-mobile-open .nav-menu-toggle-bars::before {
+  transform: rotate(45deg);
+}
+
+body.nav-mobile-open .nav-menu-toggle-bars::after {
+  transform: rotate(-45deg);
+}
+
 .main-nav {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  flex: 1 1 auto;
   justify-content: center;
   gap: 4px 6px;
   min-width: 0;
@@ -680,23 +868,14 @@ a:hover {
   animation: fx-nav-active 3.2s ease-in-out infinite;
 }
 
-/* Как у Wynncraft: логотип слева, рядом плоские текстовые пункты без «рамок-кнопок» */
-.site-header-start {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem 1rem;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
+/* Центральная колонка сетки — пункты по центру экрана; Wynncraft-стиль без «рамок-кнопок» */
 .main-nav.main-nav--wynncraft {
   justify-content: center;
-  flex: 1 1 auto;
   gap: 2px 2px;
 }
 
 .main-nav.main-nav--wynncraft button {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-heading);
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.035em;
@@ -724,12 +903,32 @@ a:hover {
   box-shadow: none;
 }
 
+@media (max-width: 1023px) {
+  .main-nav.main-nav--wynncraft button {
+    font-size: 0.75rem;
+    padding: 0.38rem 0.5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .main-nav.main-nav--wynncraft button {
+    font-size: 0.95rem;
+    padding: 0.65rem 0.85rem;
+  }
+}
+
+/* Затемнение под выезжающим меню (только мобильный режим в медиазапросе ниже) */
+.nav-mobile-scrim {
+  display: none;
+}
+
 .nav-auth {
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
-  flex-shrink: 0;
+  flex-shrink: 1;
+  min-width: 0;
 }
 
 .nav-user-btns,
@@ -740,14 +939,91 @@ a:hover {
   align-items: center;
 }
 
+/* Гость: слот как у аватара — пиксельный «?», фон прозрачный */
+.nav-guest-avatar-slot {
+  flex-shrink: 0;
+  width: var(--nav-head-size);
+  height: var(--nav-head-size);
+  border-radius: 7px;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px solid rgba(107, 90, 46, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-guest-avatar-slot-mark {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  color: rgba(200, 182, 150, 0.55);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  user-select: none;
+  transform: translateY(-1px);
+}
+
+.nav-user-identity {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: min(42vw, 16rem);
+  min-width: 0;
+  flex-shrink: 1;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+}
+
+.nav-user-identity:focus-visible {
+  outline: 2px solid var(--border-gold);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.nav-user-name {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: rgba(232, 220, 196, 0.9);
+  min-width: 0;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-user-avatar {
+  flex-shrink: 0;
+  width: var(--nav-head-size);
+  height: var(--nav-head-size);
+  border-radius: 7px;
+  object-fit: cover;
+  object-position: center top;
+  border: 1px solid var(--border-gold-dim);
+  background: var(--bg-deep);
+  box-shadow: 0 0 0 1px rgba(13, 10, 18, 0.65);
+}
+
 /* ——— Кнопки ——— */
 .btn {
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: 0.85rem;
+  font-size: 0.94rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 0.65rem 1.25rem;
+  padding: 0.78rem 1.5rem;
   border-radius: 4px;
   border: 2px solid var(--border-gold-dim);
   background: linear-gradient(180deg, #2a2438, #1a1525);
@@ -800,25 +1076,46 @@ a:hover {
 }
 
 .btn-small {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.7rem;
+  padding: 0.46rem 0.85rem;
+  font-size: 0.76rem;
 }
 
 .site-header .btn-small {
-  padding: 0.28rem 0.55rem;
-  font-size: 0.65rem;
+  padding: 0.34rem 0.62rem;
+  font-size: 0.71rem;
+}
+
+/* Только гость: Вход / Регистрация — по высоте как слот аватара (32px) */
+.site-header #nav-guest .btn.btn-small {
+  min-height: var(--nav-head-size);
+  height: var(--nav-head-size);
+  padding: 0 0.72rem;
+  font-size: 0.66rem;
+  line-height: 1.1;
+  letter-spacing: 0.07em;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ——— Макет страниц ——— */
 .site-main {
   flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   position: relative;
   z-index: 3;
   width: 100%;
-  max-width: 1100px;
+  max-width: min(100%, var(--layout-main-max));
   margin: 0 auto;
-  padding: 2rem 1.25rem 3rem;
+  padding: 2rem max(20px, 1.25rem) 3rem;
+  box-sizing: border-box;
+}
+
+/* Нижний отступ у активного экрана, чтобы контент не «лип» к футеру */
+.site-main > .view.is-visible {
+  padding-bottom: var(--section-gap);
 }
 
 .view {
@@ -828,6 +1125,24 @@ a:hover {
 
 .view.is-visible {
   display: block;
+}
+
+/* «Как зайти» — плейсхолдер */
+.connect-in-dev {
+  text-align: center;
+  padding: 2rem 1.25rem 2.25rem;
+}
+
+.connect-in-dev-lead {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--text-parchment);
+  opacity: 0.9;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 @keyframes viewFadeIn {
@@ -935,12 +1250,6 @@ a:hover {
       drop-shadow(6px 8px 22px rgba(50, 28, 16, 0.09));
   }
 
-  @media (hover: hover) and (pointer: fine) and (min-width: 721px) {
-    .site-footer-reveal .site-footer {
-      transition: transform 0.12s ease;
-    }
-  }
-
   .feature-card:hover {
     transform: none;
   }
@@ -972,11 +1281,14 @@ a:hover {
 }
 
 .panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
   background: var(--bg-card);
   border: 1px solid var(--border-gold-dim);
   border-radius: 8px;
   padding: 1.75rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: var(--section-gap);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.04);
   transition:
     border-color 0.25s ease,
@@ -1003,7 +1315,7 @@ a:hover {
   font-size: 1.75rem;
   border-bottom: 1px solid var(--border-gold-dim);
   padding-bottom: 0.5rem;
-  margin-bottom: 1rem;
+  margin-bottom: 0;
 }
 
 .panel-auth-head {
@@ -1088,7 +1400,7 @@ a:hover {
   position: relative;
   z-index: 0;
   margin: 0;
-  padding-top: 1.5rem;
+  padding-top: 3.25rem;
   line-height: 0;
   font-size: 0;
   overflow: visible;
@@ -1147,33 +1459,66 @@ a:hover {
   position: relative;
   z-index: 1;
   display: block;
-  width: min(88vw, 320px);
+  width: min(88vw, 20rem);
   max-width: 100%;
   height: auto;
+  aspect-ratio: 800 / 191;
+  object-fit: contain;
   margin: 0 auto;
   animation: fx-hero-title 6.8s ease-in-out infinite;
 }
 
 .hero-actions {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 1.15rem;
   width: 100%;
   max-width: min(100%, 52rem);
   margin-top: 12rem;
-  padding: 0 0.25rem 1.25rem;
+  padding: 0 clamp(0.75rem, 4vw, 1.25rem) 1.25rem;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+  overflow: visible;
 }
 
 .hero-actions .btn {
   flex: 0 0 auto;
   white-space: nowrap;
+}
+
+/*
+ * Главная: лого чуть ниже базового (+115px к padding-top; −10px к прошлому +125px).
+ * margin-top кнопок оставляем calc(12rem - 125px), чтобы блок кнопок поднялся вместе с лого на те же 10px.
+ */
+#view-home .hero h1.hero-title {
+  padding-top: calc(3.25rem + 115px);
+}
+
+#view-home .hero-actions {
+  margin-top: calc(12rem - 125px);
+}
+
+/* Планшет и узкий экран: больше воздуха между кнопками, колонка чтобы не наезжали */
+@media (max-width: 1023px) {
+  .hero-inner {
+    gap: 1.25rem;
+  }
+
+  #view-home .hero-actions,
+  .hero-actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: center;
+    margin-top: clamp(1.5rem, 6vw, 3rem);
+    gap: 1rem;
+  }
+
+  #view-home .hero-actions .btn,
+  .hero-actions .btn {
+    max-width: min(22rem, 100%);
+    white-space: normal;
+  }
 }
 
 /* ——— Сетка карточек ——— */
@@ -1232,6 +1577,24 @@ a:hover {
 /* ——— Формы ——— */
 .form-group {
   margin-bottom: 1rem;
+}
+
+:is(.panel, .profile-modal) form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
+}
+
+:is(.panel, .profile-modal) form > .form-group {
+  margin-bottom: 0;
+}
+
+:is(.panel, .profile-modal) form > .form-actions {
+  margin-top: 0;
+}
+
+.profile-modal > .flash {
+  margin-bottom: 0;
 }
 
 .form-group label {
@@ -1480,6 +1843,7 @@ label.admin-filter input {
 
 .ip-box {
   display: flex;
+  flex-direction: row;
   flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
@@ -1489,6 +1853,12 @@ label.admin-filter input {
   color: var(--border-gold);
   border-radius: 8px;
   animation: fx-ip-glow 4.5s ease-in-out infinite;
+}
+
+/* .panel задаёт column; IP-блок остаётся горизонтальным */
+.panel.ip-box {
+  flex-direction: row;
+  flex-wrap: wrap;
 }
 
 /* ——— Личный кабинет — одна рамка (.panel), без вложенной «коробки» у .profile-card ——— */
@@ -2291,43 +2661,64 @@ label.admin-filter input {
   outline-offset: 2px;
 }
 
-/* Под контентом кабинета: слева навигация/выход, справа зал хранителей (если есть) и пароль */
+/* Под контентом кабинета: широкий экран — слева главная/выход, справа зал и пароль; узкий — колонка сверху вниз: пароль, зал, выход, главная. */
 .profile-footer-actions {
   display: flex;
   flex-wrap: wrap;
-  justify-content: space-between;
   align-items: center;
-  gap: 1rem 1.5rem;
+  gap: 0.75rem 1rem;
   margin-top: 1.5rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border-gold-dim);
 }
 
-.profile-footer-actions-leading {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
+.profile-footer-btn {
+  flex: 0 1 auto;
 }
 
-.profile-footer-actions-trailing {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.75rem;
+@media (min-width: 768px) {
+  .profile-footer-actions {
+    justify-content: flex-start;
+  }
+
+  .profile-footer-btn--home {
+    order: 1;
+  }
+
+  .profile-footer-btn--logout {
+    order: 2;
+  }
+
+  .profile-footer-btn--guardians {
+    order: 3;
+  }
+
+  .profile-footer-btn--password {
+    order: 4;
+  }
+
+  .profile-footer-btn--guardians:not(.hidden) {
+    margin-left: auto;
+  }
+
+  .profile-footer-actions:has(.profile-footer-btn--guardians.hidden) .profile-footer-btn--password {
+    margin-left: auto;
+  }
 }
 
-@media (max-width: 520px) {
+@media (max-width: 767px) {
   .profile-footer-actions {
     flex-direction: column;
     align-items: stretch;
   }
 
-  .profile-footer-actions-trailing {
-    justify-content: flex-start;
+  .profile-footer-actions .profile-footer-btn {
+    width: 100%;
+    box-sizing: border-box;
   }
+}
 
+@media (max-width: 520px) {
   .profile-detail-row {
     grid-template-columns: 1fr;
     gap: 0.25rem;
@@ -2344,9 +2735,9 @@ label.admin-filter input {
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   :root {
-    --chrome-bar-padding-x: 12px;
+    --chrome-bar-padding-x: max(20px, 1rem);
   }
 
   .site-footer-reveal {
@@ -2381,14 +2772,20 @@ label.admin-filter input {
   }
 
   .site-footer-inner {
-    grid-template-columns: 1fr;
-    justify-items: center;
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    gap: 0.55rem;
   }
 
-  .site-footer-center,
+  .site-footer-center {
+    justify-content: center;
+    order: 1;
+  }
+
   .site-footer-socials {
-    grid-column: auto;
-    justify-self: center;
+    justify-content: center;
+    order: 2;
   }
 }
 
@@ -2425,7 +2822,7 @@ label.admin-filter input {
   pointer-events: none;
 }
 
-@media (max-width: 720px) {
+@media (max-width: 767px) {
   .profile-cabinet-spacer {
     margin-left: 0;
     max-width: 100%;
@@ -2440,7 +2837,7 @@ label.admin-filter input {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1.25rem;
+  padding: 1.25rem max(20px, 1.25rem);
   box-sizing: border-box;
 }
 
@@ -2458,6 +2855,9 @@ label.admin-filter input {
 .profile-modal {
   position: relative;
   z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
   width: 100%;
   max-width: 420px;
   padding: 1.5rem 1.65rem;
@@ -2474,7 +2874,8 @@ label.admin-filter input {
 }
 
 .profile-modal-title {
-  margin: 0 0 0.5rem;
+  margin: 0;
+  padding-bottom: 0.15rem;
   font-size: 1.2rem;
   letter-spacing: 0.06em;
   color: var(--border-gold);
@@ -2535,20 +2936,116 @@ label.admin-filter input {
 }
 
 .profile-modal-hint {
-  margin: 0 0 1rem;
+  margin: 0;
   font-size: 0.92rem;
   line-height: 1.45;
   color: var(--text-muted);
 }
 
 .profile-modal-actions {
-  margin-top: 0.25rem;
+  display: flex;
+  width: 100%;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 0.65rem 0.75rem;
+}
+
+.profile-modal-actions .btn,
+.profile-modal-actions .btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 calc(50% - 0.4rem);
+  min-width: 8.5rem;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+.profile-modal-actions .btn-primary {
+  flex-shrink: 1;
+}
+
+.profile-modal-actions--solo {
   justify-content: flex-end;
+}
+
+.profile-modal-actions--solo .btn,
+.profile-modal-actions--solo .btn-primary {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+@media (max-width: 360px) {
+  .profile-modal-actions:not(.profile-modal-actions--solo) .btn,
+  .profile-modal-actions:not(.profile-modal-actions--solo) .btn-primary {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+}
+
+/* Смена имени: обе кнопки слева в ряд, не по углам */
+.profile-modal-actions--lead {
+  justify-content: flex-start;
+}
+
+/* Смена имени: ширина колонки = ряд кнопок, поле ровно до края «Сохранить» */
+.profile-modal-field-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--block-gap);
+  width: 100%;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.profile-modal-field-stack > .form-group {
+  min-width: 0;
+}
+
+.profile-modal-field-stack > .form-group input {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
 }
 
 #profile-modal-change-msg {
   margin-bottom: 0.75rem;
   min-height: 0;
+}
+
+/* Смена имени: плотнее заголовок — подсказка — поле — кнопки */
+#profile-modal-change-name .profile-modal-title {
+  margin-bottom: 0.35rem;
+}
+
+#profile-modal-change-name .profile-modal-hint {
+  margin-bottom: 0.4rem;
+}
+
+#profile-modal-change-name #profile-modal-change-msg:empty {
+  display: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+}
+
+#profile-modal-change-name #profile-modal-change-msg:not(:empty) {
+  margin-bottom: 0.45rem;
+}
+
+#profile-modal-change-name .profile-modal-field-stack > .form-group {
+  margin-bottom: 0;
+}
+
+#profile-modal-change-name .profile-modal-field-stack > .form-group label {
+  margin-bottom: 0.35rem;
+}
+
+#profile-modal-change-name .profile-modal-field-stack > .form-actions.profile-modal-actions {
+  margin-top: 0.25rem;
 }
 
 #profile-modal-password-msg,
@@ -2697,8 +3194,8 @@ label.admin-filter input {
 
 .staff-user-item-avatar {
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
+  width: 2.625rem;
+  height: 2.625rem;
   border-radius: 8px;
   overflow: hidden;
   border: 1px solid var(--border-gold-dim);
@@ -2881,7 +3378,7 @@ label.admin-filter input {
   margin-top: 1.25rem;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 767px) {
   .staff-hub-grid {
     grid-template-columns: 1fr;
   }
@@ -2891,3 +3388,283 @@ label.admin-filter input {
     border-bottom: 1px solid rgba(107, 90, 46, 0.35);
   }
 }
+
+/* ——— Адаптив: mobile-first дополнения (гамбургер, герой, модалки, сетки, max-width) ——— */
+
+.panel-flow-2col {
+  display: grid;
+  gap: 1rem 1.35rem;
+  grid-template-columns: 1fr;
+}
+
+.panel-flow-2col--news .news-chronicle-aside {
+  color: var(--text-muted);
+  font-size: 0.98rem;
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .panel-flow-2col {
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+  }
+
+  .faq-placeholder-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .panel-flow-2col {
+    grid-template-columns: 1fr;
+    max-width: 52rem;
+  }
+
+  .panel-flow-2col--news {
+    max-width: 56rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .nav-menu-toggle {
+    display: inline-flex;
+  }
+
+  .main-nav.main-nav--wynncraft {
+    position: fixed;
+    top: var(--chrome-bar-height);
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: min(20rem, 90vw);
+    max-width: 100%;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    padding: 1.1rem 1rem 1.35rem;
+    margin: 0;
+    border-left: 2px solid rgba(201, 162, 39, 0.45);
+    background:
+      linear-gradient(180deg, rgba(201, 162, 39, 0.07) 0%, transparent 12%),
+      linear-gradient(195deg, rgba(26, 20, 38, 0.99) 0%, rgba(8, 6, 14, 0.99) 55%, rgba(12, 8, 18, 1) 100%);
+    box-shadow:
+      inset 0 0 0 1px rgba(201, 162, 39, 0.12),
+      -16px 0 48px rgba(0, 0, 0, 0.6);
+    z-index: var(--nav-mobile-panel-z);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    transform: translateX(100%);
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      transform 0.22s ease,
+      visibility 0s linear 0.22s;
+  }
+
+  body.nav-mobile-open .main-nav.main-nav--wynncraft {
+    transform: translateX(0);
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      transform 0.22s ease,
+      visibility 0s linear 0s;
+  }
+
+  .nav-mobile-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: var(--nav-mobile-scrim-z);
+    cursor: pointer;
+    background: rgba(4, 2, 10, 0.58);
+    backdrop-filter: blur(3px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+
+  body.nav-mobile-open .nav-mobile-scrim {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  html.nav-mobile-open,
+  body.nav-mobile-open {
+    overflow: hidden;
+    overflow-x: hidden;
+    overscroll-behavior: none;
+  }
+
+  .main-nav.main-nav--wynncraft button {
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+    justify-content: flex-start;
+    display: flex;
+    align-items: center;
+    border-radius: 6px;
+    border-bottom: 1px solid rgba(107, 90, 46, 0.28);
+  }
+
+  .main-nav.main-nav--wynncraft button:last-child {
+    border-bottom: none;
+  }
+
+  /* Шапка: flex — лого слева, справа блок (вход/профиль + гамбургер с зазором ≥15px) */
+  .site-header {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    column-gap: 0.5rem;
+  }
+
+  .site-header > .brand {
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: min(46vw, 12rem);
+    /* visible: иначе overflow:hidden даёт квадратную обрезку вокруг scale(лого) */
+    overflow: visible;
+    padding-right: 0;
+  }
+
+  .site-header > .header-actions-rail {
+    position: relative;
+    z-index: var(--nav-mobile-header-rail-z);
+    flex: 0 1 auto;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: max(15px, 1.25rem);
+    min-width: 0;
+    max-width: min(72vw, 100%);
+  }
+
+  .site-header .nav-auth {
+    flex-wrap: nowrap;
+    min-width: 0;
+  }
+
+  .nav-user-btns {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  .nav-user-name {
+    display: none;
+  }
+
+  .nav-user-identity {
+    max-width: none;
+    flex-shrink: 0;
+  }
+
+  .header-actions-rail #nav-guest .btn.btn-small {
+    min-height: 2rem;
+    height: 2rem;
+    padding: 0 0.5rem;
+    font-size: 0.6rem;
+    letter-spacing: 0.05em;
+  }
+
+  .header-actions-rail #nav-user .btn.btn-small {
+    min-height: 2rem;
+    height: 2rem;
+    padding: 0 0.55rem;
+    font-size: 0.62rem;
+  }
+
+  .brand-logo {
+    margin-left: -10px;
+    transform: scale(1.28);
+    transform-origin: left center;
+  }
+
+  .site-main {
+    padding: 1.5rem max(20px, 1.25rem) 2.5rem;
+  }
+
+  .hero {
+    padding: 3.5rem 0.85rem 2.5rem;
+  }
+
+  .hero .hero-logo {
+    width: min(88vw, 16.25rem);
+  }
+
+  #view-home .hero h1.hero-title {
+    padding-top: calc(2rem + 48px);
+  }
+
+  #view-home .hero-actions {
+    flex-direction: column;
+    align-items: center;
+    margin-top: 4.5rem;
+    gap: 0.75rem;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  .hero-actions .btn {
+    width: 100%;
+    max-width: 18rem;
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .profile-modal-overlay {
+    align-items: flex-start;
+    padding: max(0.75rem, env(safe-area-inset-top, 0px)) max(20px, 1rem) 1rem;
+  }
+
+  .profile-modal {
+    width: min(90vw, 420px);
+    max-width: 90vw;
+    max-height: min(90vh, 640px);
+    overflow-y: auto;
+    margin-top: 0.5rem;
+    box-sizing: border-box;
+  }
+
+  .panel {
+    padding: 1.25rem 1.1rem;
+  }
+
+  .panel h2 {
+    font-size: 1.45rem;
+  }
+
+  .faq-placeholder-list {
+    grid-template-columns: 1fr;
+  }
+
+  /* Сотрудничество: кнопки формы колонкой на узком экране */
+  #view-cooperation .form-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #view-cooperation .form-actions .btn {
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.nav-mobile-open .main-nav.main-nav--wynncraft,
+  .main-nav.main-nav--wynncraft {
+    transition: none;
+  }
+
+  .nav-mobile-scrim {
+    transition: none;
+  }
+}
+

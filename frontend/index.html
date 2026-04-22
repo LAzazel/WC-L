@@ -21,45 +21,72 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="static/css/fantasy.css?v=152" />
+    <link rel="stylesheet" href="static/css/fantasy.css?v=229" />
   </head>
   <body data-view="home">
     <div class="site-page">
     <header class="site-header">
-      <div class="site-header-start">
-        <button type="button" class="brand" data-go-home aria-label="На главную">
-          <img
-            class="brand-logo"
-            src="static/img/wc-l-logo.png"
-            alt=""
-            width="56"
-            height="56"
-            decoding="async"
-            aria-hidden="true"
-          />
+      <button type="button" class="brand" data-go-home aria-label="На главную">
+        <img
+          class="brand-logo"
+          src="static/img/wc-l-logo.png"
+          alt=""
+          decoding="async"
+          aria-hidden="true"
+        />
+      </button>
+
+      <nav id="main-nav" class="main-nav main-nav--wynncraft" aria-label="Разделы">
+        <button type="button" data-nav="home" class="is-active">Главная</button>
+        <button type="button" data-nav="about">О сервере</button>
+        <button type="button" data-nav="rules">Правила</button>
+        <button type="button" data-nav="news">Новости</button>
+        <button type="button" data-nav="connect">Как зайти</button>
+      </nav>
+
+      <div class="header-actions-rail">
+        <div class="nav-auth">
+          <div id="nav-guest">
+            <div class="nav-guest-avatar-slot" aria-hidden="true" title="Вы не вошли в аккаунт">
+              <span class="nav-guest-avatar-slot-mark">?</span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-small" data-nav="login">Вход</button>
+            <button type="button" class="btn btn-primary btn-small" data-nav="register">Регистрация</button>
+          </div>
+          <div id="nav-user" class="hidden nav-user-btns">
+            <button
+              type="button"
+              class="nav-user-identity"
+              data-nav="profile"
+              aria-label="Личный кабинет"
+            >
+              <span id="nav-user-label" class="nav-user-name"></span>
+              <img
+                id="nav-user-avatar"
+                class="nav-user-avatar"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                referrerpolicy="no-referrer"
+              />
+            </button>
+            <button type="button" class="btn btn-danger btn-small" id="btn-logout">Выход</button>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="nav-menu-toggle"
+          id="nav-menu-toggle"
+          aria-expanded="false"
+          aria-controls="main-nav"
+          aria-label="Меню разделов"
+        >
+          <span class="nav-menu-toggle-bars" aria-hidden="true"></span>
         </button>
-
-        <nav class="main-nav main-nav--wynncraft" aria-label="Разделы">
-          <button type="button" data-nav="home" class="is-active">Главная</button>
-          <button type="button" data-nav="about">О сервере</button>
-          <button type="button" data-nav="rules">Правила</button>
-          <button type="button" data-nav="news">Новости</button>
-          <button type="button" data-nav="connect">Как зайти</button>
-        </nav>
-      </div>
-
-      <div class="nav-auth">
-        <div id="nav-guest">
-          <button type="button" class="btn btn-ghost btn-small" data-nav="login">Вход</button>
-          <button type="button" class="btn btn-primary btn-small" data-nav="register">Регистрация</button>
-        </div>
-        <div id="nav-user" class="hidden nav-user-btns">
-          <span id="nav-user-label" class="brand-tagline" style="align-self: center"></span>
-          <button type="button" class="btn btn-ghost btn-small" data-nav="profile">Личный кабинет</button>
-          <button type="button" class="btn btn-danger btn-small" id="btn-logout">Выход</button>
-        </div>
       </div>
     </header>
+
+    <div class="nav-mobile-scrim" id="nav-mobile-scrim" aria-hidden="true"></div>
 
     <main class="site-main">
       <!-- Главная -->
@@ -71,14 +98,14 @@
                 class="hero-logo"
                 src="static/img/wc-l-logo.png"
                 alt="WC-L"
-                width="800"
-                height="191"
                 decoding="async"
               />
             </h1>
             <div class="hero-actions">
               <button type="button" class="btn btn-primary" data-nav="connect">Играть сейчас</button>
-              <button type="button" class="btn" data-nav="register">Создать героя</button>
+              <button type="button" class="btn" id="btn-hero-register" data-nav="register">
+                Создать героя
+              </button>
               <button type="button" class="btn" data-nav="about">Узнать больше</button>
             </div>
           </div>
@@ -89,23 +116,21 @@
       <section id="view-about" class="view">
         <div class="panel">
           <h2>О царстве WC-L</h2>
-          <p>
-            WC-L — это вымышленный континент, где игроки Minecraft собираются вместе, чтобы строить города,
-            исследовать глубины и отражать набеги тьмы. Мы ценим атмосферу RPG: от таверн с историями до
-            эпических осад замков.
-          </p>
-          <p>
-            Сервер ориентирован на долгую игру: экономика, кланы, ивенты и поддержка новичков. Выбери путь
-            торговца, стража границ или мага-исследователя — мир откликнется на твой выбор.
-          </p>
-          <h3>Версия и моды</h3>
-          <p>
-            <em>Прототип сайта:</em> уточните у администрации точную версию клиента и список модов/плагинов.
-            Здесь позже появятся кнопки скачивания лаунчера и инструкции.
-          </p>
+          <div class="panel-flow-2col">
+            <p>
+              Наш мир — это суровая песочница в духе классических Dungeon RPG, где каждый камень пропитан древней магией, а
+              в тенях пещер таятся опасности, о которых не поют в тавернах.
+            </p>
+            <p>
+              Сейчас проект находится на раннем этапе пробуждения (Alpha). Мы — небольшая команда энтузиастов, которая
+              вкладывает душу в каждый пиксель, чтобы создать по-настоящему глубокий и захватывающий геймплей. Мы активно
+              работаем над реализацией всех механик и систем. Спасибо, что вы с нами в самом начале этого легендарного
+              похода!
+            </p>
+          </div>
           <div class="form-actions">
             <button type="button" class="btn" data-nav="rules">Читать правила</button>
-            <button type="button" class="btn btn-primary" data-nav="connect">IP и вход</button>
+            <button type="button" class="btn btn-primary" data-nav="connect">Как зайти</button>
           </div>
         </div>
       </section>
@@ -115,57 +140,54 @@
         <div class="panel">
           <h2>Кодекс королевства</h2>
           <ol class="rules-list">
-            <li>Не используйте читы, дюпы и эксплойты — нарушители изгоняются из цитадели.</li>
-            <li>Оскорбления, дискриминация и токсичность караются предупреждениями и баном.</li>
-            <li>Стройте с уважением к чужим территориям; войны и рейды — по правилам сезона.</li>
-            <li>Реклама сторонних проектов без согласования с хранителями запрещена.</li>
-            <li>Администрация имеет последнее слово в спорных ситуациях.</li>
+            <li>
+              <strong>Честная игра.</strong> Запрещены читы, модификации клиента дающие нечестное преимущество,
+              автоматизация действий против правил сервера, эксплойты и злоупотребление ошибками игры или плагинов.
+            </li>
+            <li>
+              <strong>Грифинг.</strong> Разрушение чужих построек, кража без согласия владельца или саботаж чужого
+              прогресса недопустимы, если иное прямо не предусмотрено режимом или явными правилами ивента.
+            </li>
+            <li>
+              <strong>Справедливый бой.</strong> Обход PvP‑условий, злоупотребление механиками боя или намеренное
+              мешание игре других без игрового повода может привести к санкциям.
+            </li>
+            <li>
+              <strong>Уважение.</strong> Оскорбления, преследование игроков, разжигание ненависти и токсичность
+              наказываются по серьёзности нарушения.
+            </li>
+            <li>
+              <strong>Реклама и спам.</strong> Реклама сторонних проектов и массовый спам без согласования с
+              администрацией запрещены.
+            </li>
+            <li>
+              <strong>Решение хранителей.</strong> В спорных случаях последнее слово за администрацией; наказания
+              выбираются по тяжести проступка.
+            </li>
           </ol>
-          <button type="button" class="btn btn-primary" data-nav="register">Принять и зарегистрироваться</button>
         </div>
       </section>
 
       <!-- Новости -->
       <section id="view-news" class="view">
         <div class="panel">
-          <h2>Хроники (заглушка)</h2>
-          <p class="flash flash-info">Раздел для будущих постов: патчи, ивенты, набор в гильдии.</p>
-        </div>
-        <div class="card-grid">
-          <article class="feature-card">
-            <h3>Зима 2026 — «Лёд и пламя»</h3>
-            <p>Скоро: зимний ивент с уникальными наградами и ледяными подземельями.</p>
-            <button type="button" class="btn btn-small" disabled>Скоро</button>
-          </article>
-          <article class="feature-card">
-            <h3>Открытие врат WC-L</h3>
-            <p>Первый камень заложен: сайт и учётные записи готовы к испытаниям игроков.</p>
-          </article>
-          <article class="feature-card">
-            <h3>Набор в стражу</h3>
-            <p>Ищем модераторов и строителей спавна. Пишите через Discord (ссылка позже).</p>
-          </article>
+          <h2>Хроники</h2>
+          <div class="panel-flow-2col panel-flow-2col--news">
+            <p>
+              Здесь появятся известия из цитадели: обновления, исправления и заметки о том, что меняется в мире WC-L.
+            </p>
+            <p class="news-chronicle-aside">
+              Пока записи ждут своего пергамента — следите за объявлениями в соцсетях и на главной странице проекта.
+            </p>
+          </div>
         </div>
       </section>
 
       <!-- Как зайти -->
       <section id="view-connect" class="view">
-        <div class="panel">
-          <h2>Как войти в мир</h2>
-          <p>Установите Minecraft нужной версии, добавьте сервер в список мультиплеера и введите адрес:</p>
-          <div class="ip-box panel" style="margin-top: 1rem; justify-content: space-between">
-            <span id="server-ip">play.wc-l.example</span>
-            <button type="button" class="btn btn-small" id="btn-copy-ip">Копировать IP</button>
-          </div>
-          <p id="copy-ip-feedback" style="min-height: 1.5rem; color: var(--accent-emerald); margin-top: 0.5rem"></p>
-          <p>
-            Для доступа к личному кабинету на сайте создайте учётную запись — она может понадобиться лаунчеру и
-            бонусам.
-          </p>
-          <div class="form-actions">
-            <button type="button" class="btn btn-primary" data-nav="register">Регистрация</button>
-            <button type="button" class="btn" data-nav="login">Уже есть герой — войти</button>
-          </div>
+        <div class="panel connect-in-dev">
+          <h2 class="visually-hidden">Как зайти</h2>
+          <p class="connect-in-dev-lead">В разработке</p>
         </div>
       </section>
 
@@ -257,12 +279,12 @@
       <section id="view-register" class="view">
         <div class="panel">
           <h2>Создание героя</h2>
-          <p>Минимум 3 символа в имени, 8 в пароле. Имя <strong>admin</strong> зарезервировано для хранителей.</p>
+          <p>Имя героя: от 3 до 18 символов; пароль — не короче 8. Имя <strong>admin</strong> зарезервировано для хранителей.</p>
           <div id="register-message" class="flash" role="status"></div>
           <form id="form-register">
             <div class="form-group">
               <label for="reg-username">Имя героя</label>
-              <input id="reg-username" name="username" type="text" required minlength="3" maxlength="50" />
+              <input id="reg-username" name="username" type="text" required minlength="3" maxlength="18" />
             </div>
             <div class="form-group">
               <label for="reg-email">Email</label>
@@ -286,20 +308,16 @@
           <h2 class="profile-page-title">Личный кабинет</h2>
           <div id="profile-message" class="flash" role="status"></div>
           <div id="profile-content"></div>
+          <!-- Узкий экран: сверху вниз — пароль, зал, выход, главная (внизу «На главную»). Широкий — слева главная/выход, справа зал/пароль. -->
           <div class="profile-footer-actions form-actions">
-            <div class="profile-footer-actions-leading">
-              <button type="button" class="btn" data-nav="home">На главную</button>
-              <button type="button" class="btn btn-ghost" id="btn-logout-2">Выйти</button>
-            </div>
-            <div class="profile-footer-actions-trailing">
-              <button type="button" class="btn btn-primary hidden" id="btn-profile-guardians" data-nav="admin">
-                Зал хранителей
-              </button>
-              <button type="button" class="btn btn-primary hidden" id="btn-profile-processing" data-nav="processing">
-                Обработка
-              </button>
-              <button type="button" class="btn btn-ghost" id="btn-profile-change-password">Изменить пароль</button>
-            </div>
+            <button type="button" class="btn btn-ghost profile-footer-btn profile-footer-btn--password" id="btn-profile-change-password">
+              Изменить пароль
+            </button>
+            <button type="button" class="btn btn-primary profile-footer-btn profile-footer-btn--guardians hidden" id="btn-profile-guardians" data-nav="admin">
+              Зал хранителей
+            </button>
+            <button type="button" class="btn btn-ghost profile-footer-btn profile-footer-btn--logout" id="btn-logout-2">Выйти</button>
+            <button type="button" class="btn profile-footer-btn profile-footer-btn--home" data-nav="home">На главную</button>
           </div>
         </div>
       </section>
@@ -366,31 +384,35 @@
       </section>
 
       <section id="view-cooperation" class="view">
-        <div class="panel">
+        <div class="panel cooperation-panel">
           <h2>Сотрудничество</h2>
-          <p>
-            Если хотите помочь проекту, оставьте заявку. Мы рассмотрим её и свяжемся с вами позже. Пока это только
-            интерфейс без отправки на сервер.
+          <p class="cooperation-lead">
+            Оставьте ваши контактные данные (Telegram, Discord или Email), и наша команда свяжется с вами для
+            обсуждения сотрудничества.
           </p>
           <div id="cooperation-message" class="flash" role="status"></div>
-          <form id="form-cooperation">
+          <form
+            id="form-cooperation"
+            action="#"
+            method="post"
+            data-cooperation-endpoint=""
+            data-cooperation-method="POST"
+          >
             <div class="form-group">
-              <label for="cooperation-contact">Discord / Telegram / Email</label>
-              <input id="cooperation-contact" name="contact" type="text" required minlength="3" maxlength="120" />
-            </div>
-            <div class="form-group">
-              <label for="cooperation-skills">Что умеете и чем можете помочь</label>
-              <textarea
-                id="cooperation-skills"
-                name="skills"
-                rows="6"
+              <label for="cooperation-contact">Контакт</label>
+              <input
+                id="cooperation-contact"
+                name="contact"
+                type="text"
                 required
-                minlength="10"
-                maxlength="1200"
-              ></textarea>
+                minlength="3"
+                maxlength="280"
+                autocomplete="email"
+                placeholder="@telegram, Discord tag или email…"
+              />
             </div>
             <div class="form-actions">
-              <button type="submit" class="btn btn-primary">Отправить заявку</button>
+              <button type="submit" class="btn btn-primary">Отправить</button>
               <button type="button" class="btn" data-nav="home">На главную</button>
             </div>
           </form>
@@ -407,46 +429,6 @@
             Что сюда добавить потом: реквизиты, безопасные способы оплаты, список бонусов, ответы на частые вопросы и
             напоминание, что пожертвования не отменяют правила сервера.
           </p>
-        </div>
-      </section>
-
-      <section id="view-processing" class="view">
-        <div class="panel panel-staff-hub">
-          <div class="staff-hub-head">
-            <h2>Обработка</h2>
-            <p class="staff-hub-lead">
-              Тот же интерфейс, что и в зале хранителей: поиск, список и карточка игрока. Заявки из «Сотрудничества»
-              подключатся к списку позже — сейчас для проверки UI показываются учётные записи с сервера.
-            </p>
-            <div id="processing-message" class="flash" role="status"></div>
-          </div>
-          <div class="staff-hub-grid">
-            <aside class="staff-hub-sidebar" aria-label="Список для обработки">
-              <div class="staff-hub-search-row">
-                <label class="staff-search-label" for="processing-user-search">Поиск</label>
-                <input
-                  type="search"
-                  id="processing-user-search"
-                  class="staff-hub-search"
-                  placeholder="Имя, email или ID…"
-                  autocomplete="off"
-                  spellcheck="false"
-                />
-              </div>
-              <div class="staff-hub-sidebar-divider" aria-hidden="true"></div>
-              <ul id="processing-user-list" class="staff-user-list" role="listbox" aria-label="Записи"></ul>
-            </aside>
-            <div class="staff-hub-detail-wrap">
-              <div id="processing-user-detail" class="staff-user-detail" data-staff-detail="processing">
-                <div class="staff-user-detail-empty">
-                  <p>Выберите запись слева — здесь будет полный профиль и действия.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="staff-hub-footer-actions">
-            <button type="button" class="btn" data-nav="profile">Назад в кабинет</button>
-          </div>
         </div>
       </section>
     </main>
@@ -536,25 +518,27 @@
       >
         <h3 id="profile-modal-change-title" class="profile-modal-title">Сменить имя героя</h3>
         <p class="profile-modal-hint">
-          Новое имя используется для входа и отображается на сайте (3–50 символов).
+          Новое имя используется для входа и отображается на сайте (3–18 символов).
         </p>
         <div id="profile-modal-change-msg" class="flash" role="status"></div>
         <form id="form-profile-change-username">
-          <div class="form-group">
-            <label for="input-profile-username">Имя героя</label>
-            <input
-              id="input-profile-username"
-              name="username"
-              type="text"
-              required
-              minlength="3"
-              maxlength="50"
-              autocomplete="username"
-            />
-          </div>
-          <div class="form-actions profile-modal-actions">
-            <button type="button" class="btn" id="btn-profile-modal-cancel">Отмена</button>
-            <button type="submit" class="btn btn-primary">Сохранить</button>
+          <div class="profile-modal-field-stack">
+            <div class="form-group">
+              <label for="input-profile-username">Имя героя</label>
+              <input
+                id="input-profile-username"
+                name="username"
+                type="text"
+                required
+                minlength="3"
+                maxlength="18"
+                autocomplete="username"
+              />
+            </div>
+            <div class="form-actions profile-modal-actions profile-modal-actions--lead">
+              <button type="button" class="btn" id="btn-profile-modal-cancel">Отмена</button>
+              <button type="submit" class="btn btn-primary">Сохранить</button>
+            </div>
           </div>
         </form>
       </div>
@@ -612,7 +596,7 @@
           </div>
           <div class="form-actions profile-modal-actions">
             <button type="button" class="btn" id="btn-profile-password-cancel">Отмена</button>
-            <button type="submit" class="btn btn-primary">Сменить пароль</button>
+            <button type="submit" class="btn btn-primary">Применить</button>
           </div>
         </form>
       </div>
@@ -629,7 +613,7 @@
           На адрес электронной почты <strong id="profile-forgot-email-masked"></strong> отправлено сообщение для смены
           пароля. Если сообщение не пришло, проверьте папку «Спам».
         </p>
-        <div class="form-actions profile-modal-actions">
+        <div class="form-actions profile-modal-actions profile-modal-actions--solo">
           <button type="button" class="btn btn-primary" id="btn-profile-forgot-done">Закрыть</button>
         </div>
       </div>
@@ -686,6 +670,6 @@
       // Другой порт/хост API — раскомментируйте и поправьте:
       // window.WC_L_API_BASE = "http://127.0.0.1:8000/api/v1";
     </script>
-    <script src="static/js/app.js?v=69" defer></script>
+    <script src="static/js/app.js?v=93" defer></script>
   </body>
 </html>
