@@ -21,7 +21,7 @@
         rel="stylesheet"
       />
     </noscript>
-    <link rel="stylesheet" href="static/css/fantasy.css?v=201" />
+    <link rel="stylesheet" href="static/css/fantasy.css?v=224" />
   </head>
   <body data-view="home">
     <div class="site-page">
@@ -31,14 +31,12 @@
           class="brand-logo"
           src="static/img/wc-l-logo.png"
           alt=""
-          width="56"
-          height="56"
           decoding="async"
           aria-hidden="true"
         />
       </button>
 
-      <nav class="main-nav main-nav--wynncraft" aria-label="Разделы">
+      <nav id="main-nav" class="main-nav main-nav--wynncraft" aria-label="Разделы">
         <button type="button" data-nav="home" class="is-active">Главная</button>
         <button type="button" data-nav="about">О сервере</button>
         <button type="button" data-nav="rules">Правила</button>
@@ -46,33 +44,49 @@
         <button type="button" data-nav="connect">Как зайти</button>
       </nav>
 
-      <div class="nav-auth">
-        <div id="nav-guest">
-          <div class="nav-guest-avatar-slot" aria-hidden="true" title="Вы не вошли в аккаунт">
-            <span class="nav-guest-avatar-slot-mark">?</span>
+      <div class="header-actions-rail">
+        <div class="nav-auth">
+          <div id="nav-guest">
+            <div class="nav-guest-avatar-slot" aria-hidden="true" title="Вы не вошли в аккаунт">
+              <span class="nav-guest-avatar-slot-mark">?</span>
+            </div>
+            <button type="button" class="btn btn-ghost btn-small" data-nav="login">Вход</button>
+            <button type="button" class="btn btn-primary btn-small" data-nav="register">Регистрация</button>
           </div>
-          <button type="button" class="btn btn-ghost btn-small" data-nav="login">Вход</button>
-          <button type="button" class="btn btn-primary btn-small" data-nav="register">Регистрация</button>
-        </div>
-        <div id="nav-user" class="hidden nav-user-btns">
-          <div class="nav-user-identity" aria-label="Текущий игрок">
-            <span id="nav-user-label" class="nav-user-name" style="align-self: center"></span>
-            <img
-              id="nav-user-avatar"
-              class="nav-user-avatar"
-              alt=""
-              width="32"
-              height="32"
-              loading="lazy"
-              decoding="async"
-              referrerpolicy="no-referrer"
-            />
+          <div id="nav-user" class="hidden nav-user-btns">
+            <button
+              type="button"
+              class="nav-user-identity"
+              data-nav="profile"
+              aria-label="Личный кабинет"
+            >
+              <span id="nav-user-label" class="nav-user-name"></span>
+              <img
+                id="nav-user-avatar"
+                class="nav-user-avatar"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                referrerpolicy="no-referrer"
+              />
+            </button>
+            <button type="button" class="btn btn-danger btn-small" id="btn-logout">Выход</button>
           </div>
-          <button type="button" class="btn btn-ghost btn-small" data-nav="profile">Личный кабинет</button>
-          <button type="button" class="btn btn-danger btn-small" id="btn-logout">Выход</button>
         </div>
+        <button
+          type="button"
+          class="nav-menu-toggle"
+          id="nav-menu-toggle"
+          aria-expanded="false"
+          aria-controls="main-nav"
+          aria-label="Меню разделов"
+        >
+          <span class="nav-menu-toggle-bars" aria-hidden="true"></span>
+        </button>
       </div>
     </header>
+
+    <div class="nav-mobile-scrim" id="nav-mobile-scrim" aria-hidden="true"></div>
 
     <main class="site-main">
       <!-- Главная -->
@@ -84,8 +98,6 @@
                 class="hero-logo"
                 src="static/img/wc-l-logo.png"
                 alt="WC-L"
-                width="800"
-                height="191"
                 decoding="async"
               />
             </h1>
@@ -104,16 +116,18 @@
       <section id="view-about" class="view">
         <div class="panel">
           <h2>О царстве WC-L</h2>
-          <p>
-            Наш мир — это суровая песочница в духе классических Dungeon RPG, где каждый камень пропитан древней магией, а
-            в тенях пещер таятся опасности, о которых не поют в тавернах.
-          </p>
-          <p>
-            Сейчас проект находится на раннем этапе пробуждения (Alpha). Мы — небольшая команда энтузиастов, которая
-            вкладывает душу в каждый пиксель, чтобы создать по-настоящему глубокий и захватывающий геймплей. Мы активно
-            работаем над реализацией всех механик и систем. Спасибо, что вы с нами в самом начале этого легендарного
-            похода!
-          </p>
+          <div class="panel-flow-2col">
+            <p>
+              Наш мир — это суровая песочница в духе классических Dungeon RPG, где каждый камень пропитан древней магией, а
+              в тенях пещер таятся опасности, о которых не поют в тавернах.
+            </p>
+            <p>
+              Сейчас проект находится на раннем этапе пробуждения (Alpha). Мы — небольшая команда энтузиастов, которая
+              вкладывает душу в каждый пиксель, чтобы создать по-настоящему глубокий и захватывающий геймплей. Мы активно
+              работаем над реализацией всех механик и систем. Спасибо, что вы с нами в самом начале этого легендарного
+              похода!
+            </p>
+          </div>
           <div class="form-actions">
             <button type="button" class="btn" data-nav="rules">Читать правила</button>
             <button type="button" class="btn btn-primary" data-nav="connect">Как зайти</button>
@@ -158,10 +172,14 @@
       <section id="view-news" class="view">
         <div class="panel">
           <h2>Хроники</h2>
-          <p>
-            Здесь появятся известия из цитадели: обновления, исправления и заметки о том, что меняется в мире WC-L.
-            Пока записи ждут своего пергамента.
-          </p>
+          <div class="panel-flow-2col panel-flow-2col--news">
+            <p>
+              Здесь появятся известия из цитадели: обновления, исправления и заметки о том, что меняется в мире WC-L.
+            </p>
+            <p class="news-chronicle-aside">
+              Пока записи ждут своего пергамента — следите за объявлениями в соцсетях и на главной странице проекта.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -290,17 +308,16 @@
           <h2 class="profile-page-title">Личный кабинет</h2>
           <div id="profile-message" class="flash" role="status"></div>
           <div id="profile-content"></div>
+          <!-- Узкий экран: сверху вниз — пароль, зал, выход, главная (внизу «На главную»). Широкий — слева главная/выход, справа зал/пароль. -->
           <div class="profile-footer-actions form-actions">
-            <div class="profile-footer-actions-leading">
-              <button type="button" class="btn" data-nav="home">На главную</button>
-              <button type="button" class="btn btn-ghost" id="btn-logout-2">Выйти</button>
-            </div>
-            <div class="profile-footer-actions-trailing">
-              <button type="button" class="btn btn-primary hidden" id="btn-profile-guardians" data-nav="admin">
-                Зал хранителей
-              </button>
-              <button type="button" class="btn btn-ghost" id="btn-profile-change-password">Изменить пароль</button>
-            </div>
+            <button type="button" class="btn btn-ghost profile-footer-btn profile-footer-btn--password" id="btn-profile-change-password">
+              Изменить пароль
+            </button>
+            <button type="button" class="btn btn-primary profile-footer-btn profile-footer-btn--guardians hidden" id="btn-profile-guardians" data-nav="admin">
+              Зал хранителей
+            </button>
+            <button type="button" class="btn btn-ghost profile-footer-btn profile-footer-btn--logout" id="btn-logout-2">Выйти</button>
+            <button type="button" class="btn profile-footer-btn profile-footer-btn--home" data-nav="home">На главную</button>
           </div>
         </div>
       </section>
@@ -653,6 +670,6 @@
       // Другой порт/хост API — раскомментируйте и поправьте:
       // window.WC_L_API_BASE = "http://127.0.0.1:8000/api/v1";
     </script>
-    <script src="static/js/app.js?v=80" defer></script>
+    <script src="static/js/app.js?v=93" defer></script>
   </body>
 </html>

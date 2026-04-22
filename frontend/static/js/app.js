@@ -106,6 +106,52 @@
   const guestBlock = document.getElementById("nav-guest");
   const userBlock = document.getElementById("nav-user");
   const userLabel = document.getElementById("nav-user-label");
+  const navMenuToggle = document.getElementById("nav-menu-toggle");
+  const navMobileScrim = document.getElementById("nav-mobile-scrim");
+  const mqNavMobile = window.matchMedia("(max-width: 767px)");
+
+  function closeNavMobile() {
+    document.documentElement.classList.remove("nav-mobile-open");
+    document.body.classList.remove("nav-mobile-open");
+    if (navMenuToggle) navMenuToggle.setAttribute("aria-expanded", "false");
+    if (navMobileScrim) navMobileScrim.setAttribute("aria-hidden", "true");
+  }
+
+  function setNavMobileOpen(open) {
+    if (!mqNavMobile.matches) {
+      document.documentElement.classList.remove("nav-mobile-open");
+      document.body.classList.remove("nav-mobile-open");
+      if (navMenuToggle) navMenuToggle.setAttribute("aria-expanded", "false");
+      if (navMobileScrim) navMobileScrim.setAttribute("aria-hidden", "true");
+      return;
+    }
+    const on = !!open;
+    document.documentElement.classList.toggle("nav-mobile-open", on);
+    document.body.classList.toggle("nav-mobile-open", on);
+    if (navMenuToggle) navMenuToggle.setAttribute("aria-expanded", on ? "true" : "false");
+    if (navMobileScrim) navMobileScrim.setAttribute("aria-hidden", on ? "false" : "true");
+  }
+
+  navMenuToggle?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!mqNavMobile.matches) return;
+    setNavMobileOpen(!document.body.classList.contains("nav-mobile-open"));
+  });
+
+  navMobileScrim?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeNavMobile();
+  });
+
+  mqNavMobile.addEventListener("change", () => closeNavMobile());
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("nav-mobile-open")) {
+      e.preventDefault();
+      closeNavMobile();
+    }
+  });
 
   function getToken() {
     return localStorage.getItem(TOKEN_KEY);
@@ -326,7 +372,7 @@
       const avSrc = chain[0] || "";
       const isSel = sel === u.id;
       const imgOrPh = avSrc
-        ? `<img src="${escapeHtml(avSrc)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
+        ? `<img src="${escapeHtml(avSrc)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
         : `<span class="staff-user-item-fallback">${initials}</span>`;
       li.innerHTML = `
         <button type="button" class="staff-user-item${isSel ? " is-selected" : ""}" data-staff-pick="${mode}" data-user-id="${u.id}">
@@ -387,7 +433,7 @@
           <div class="staff-detail-avatar-wrap">
             <div class="profile-avatar-frame staff-detail-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue:${hue}">
               <div class="profile-avatar-inner">
-                ${avSrc ? `<img class="profile-avatar-img" src="${escapeHtml(avSrc)}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />` : ""}
+                ${avSrc ? `<img class="profile-avatar-img" src="${escapeHtml(avSrc)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />` : ""}
                 <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
               </div>
             </div>
@@ -452,6 +498,7 @@
   }
 
   function showView(name) {
+    closeNavMobile();
     persistCurrentView(name);
     document.body.setAttribute("data-view", name);
     Object.keys(views).forEach((key) => {
@@ -765,8 +812,7 @@
     deco.src = localStaticUrl(def.asset);
   }
 
-  function renderProfileFrameTilesHtml(currentFrameId, tileSize) {
-    const sz = tileSize != null ? tileSize : MC_HEAD_MENU;
+  function renderProfileFrameTilesHtml(currentFrameId, _tileSize) {
     return PROFILE_FRAME_VARIANTS.map((v) => {
       const sel = v.id === currentFrameId ? " is-selected" : "";
       const title = escapeHtml(v.label);
@@ -775,7 +821,7 @@
         inner = '<span class="profile-frame-tile-none" aria-hidden="true">—</span>';
       } else if (v.asset) {
         const src = localStaticUrl(v.asset);
-        inner = `<img src="${src}" alt="" width="${sz}" height="${sz}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+        inner = `<img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
       }
       return `<button type="button" class="profile-frame-tile${sel}" role="menuitem" data-profile-frame="${v.id}" title="${title}" aria-label="${title}">${inner}</button>`;
     }).join("");
@@ -788,7 +834,7 @@
       const src = mcAvatarMenuTileSrc(username, v, userId);
       const title = escapeHtml(v.label);
       return `<button type="button" class="profile-avatar-tile${sel}" role="menuitem" data-mc-variant="${v.id}" title="${title}" aria-label="${title}">
-        <img src="${src}" alt="" width="${MC_HEAD_MENU}" height="${MC_HEAD_MENU}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+        <img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
       </button>`;
     }).join("");
     const frameTiles = renderProfileFrameTilesHtml(currentFrameId, MC_HEAD_MENU);
@@ -1217,11 +1263,11 @@
                   <div class="profile-avatar-stack">
                     <div class="profile-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue: ${hue}">
                       <div class="profile-avatar-inner">
-                        <img class="profile-avatar-img" src="${avatarUrl}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
+                        <img class="profile-avatar-img" src="${avatarUrl}" alt="" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
                         <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
                       </div>
                     </div>
-                    <img class="profile-avatar-frame-deco is-hidden" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                    <img class="profile-avatar-frame-deco is-hidden" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                   </div>
                 </div>
               </div>
