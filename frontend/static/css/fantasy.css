@@ -1,4 +1,4 @@
-/* WC-L — VCR OSD Mono + fallback для кириллицы. */
+/* WC-L — VCR OSD Mono + Crimson Text (читаемая кириллица), запасные. */
 
 /* Montserrat — локально: static/fonts/montserrat/*.ttf */
 @font-face {
@@ -277,7 +277,7 @@ body {
     100% 100%,
     cover,
     120px 120px;
-  background-position: 0 0, center center, 0 0;
+  background-position: 0 0, calc(50% + 6px) calc(50% + 102px), 0 0;
   background-repeat: no-repeat, no-repeat, repeat;
   background-attachment: scroll, scroll, scroll;
   position: relative;
@@ -336,54 +336,7 @@ body::before {
   display: block;
 }
 
-/* Десктоп с мышью: футер утоплен, видна полоска; при наведении выезжает вверх */
-@media (hover: hover) and (pointer: fine) and (min-width: 721px) {
-  .site-footer-reveal {
-    flex: 0 0 0;
-    height: 0;
-    width: 100%;
-    overflow: visible;
-    position: relative;
-    z-index: 25;
-  }
-
-  .site-footer-reveal .site-footer {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin: 0;
-    transform: translateY(calc(100% - 14px));
-    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: 0 -20px 50px rgba(0, 0, 0, 0.55);
-    will-change: transform;
-  }
-
-  .site-footer-reveal .site-footer:hover,
-  .site-footer-reveal .site-footer:focus-within {
-    transform: translateY(0);
-  }
-}
-
-/* Сенсор / без hover — футер всегда в потоке, не прячем */
-@media (hover: none) {
-  .site-footer-reveal {
-    flex: 0 0 auto !important;
-    height: auto !important;
-  }
-
-  .site-footer-reveal .site-footer {
-    position: relative !important;
-    left: auto !important;
-    right: auto !important;
-    bottom: auto !important;
-    transform: none !important;
-    box-shadow: none !important;
-    transition: none !important;
-    will-change: auto !important;
-  }
-}
-
+/* Футер всегда в потоке страницы (без выезда / «утопления» на десктопе). */
 .site-footer-plank {
   height: var(--chrome-bar-height);
   min-height: var(--chrome-bar-height);
@@ -393,7 +346,9 @@ body::before {
   border-top: 1px solid var(--border-gold-dim);
   background: linear-gradient(0deg, rgba(13, 10, 18, 0.98), rgba(20, 16, 28, 0.95));
   overflow: hidden;
-  animation: fx-footer-glow 6s ease-in-out infinite;
+  box-shadow:
+    0 -2px 16px rgba(0, 0, 0, 0.48),
+    0 0 12px rgba(201, 162, 39, 0.08);
 }
 
 .site-footer-inner {
@@ -449,27 +404,33 @@ body::before {
   border: 0;
 }
 
+/* Социконки — как нижние текстовые ссылки: без рамки и «монет», только пергамент → золото */
 .site-footer-social {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
-  padding: 0;
+  padding: 0.25rem 0.35rem;
+  margin: 0;
   border: none;
+  border-radius: 0;
   background: transparent;
-  color: rgba(62, 47, 98, 0.54);
-  cursor: default;
-  opacity: 0.68;
+  box-shadow: none;
+  color: rgba(232, 220, 196, 0.62);
+  cursor: pointer;
   transition:
-    transform 0.15s ease,
-    color 0.15s ease,
-    opacity 0.15s ease;
+    color 0.2s ease,
+    filter 0.22s ease,
+    transform 0.15s ease;
 }
 
 .site-footer-social:hover {
-  color: rgba(92, 72, 144, 0.78);
-  opacity: 1;
+  color: var(--border-gold);
+  filter: drop-shadow(0 0 6px var(--glow-gold)) drop-shadow(0 0 14px rgba(201, 162, 39, 0.28));
+}
+
+.site-footer-social:focus-visible {
+  outline: 2px solid var(--border-gold-dim);
+  outline-offset: 3px;
 }
 
 .site-footer-social:active {
@@ -487,6 +448,36 @@ body::before {
 .site-footer-social-icon--tiktok {
   width: 20px;
   height: 20px;
+}
+
+.cooperation-panel.panel h2 {
+  margin-bottom: 0.65rem;
+}
+
+.cooperation-panel .cooperation-lead {
+  margin: 0 0 0.45rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: rgba(232, 220, 196, 0.76);
+}
+
+.cooperation-panel #cooperation-message:empty {
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+}
+
+.cooperation-panel #cooperation-message:not(:empty) {
+  margin-bottom: 0.5rem;
+}
+
+.cooperation-panel form .form-group {
+  margin-bottom: 0.45rem;
+}
+
+.cooperation-panel form .form-actions {
+  margin-top: 0.55rem;
 }
 
 /* ——— Фон: монеты (высота = блок body по контенту; без лишней прокрутки) ——— */
@@ -577,20 +568,17 @@ a:hover {
   top: 0;
   z-index: 100;
   flex-shrink: 0;
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: nowrap;
-  gap: 8px 10px;
+  column-gap: 10px;
   height: var(--chrome-bar-height);
   min-height: var(--chrome-bar-height);
   max-height: var(--chrome-bar-height);
   padding: 0 var(--chrome-bar-padding-x);
   box-sizing: border-box;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
   background: linear-gradient(180deg, rgba(13, 10, 18, 0.98), rgba(20, 16, 28, 0.95));
   border-bottom: 1px solid var(--border-gold-dim);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
@@ -611,6 +599,7 @@ a:hover {
   position: relative;
   z-index: 1;
   flex-shrink: 0;
+  justify-self: start;
 }
 
 /* В потоке 56×56; визуально ×2, якорь справа — высота хедера не растёт. */
@@ -639,10 +628,10 @@ a:hover {
   display: flex;
   flex-wrap: nowrap;
   align-items: center;
-  flex: 1 1 auto;
   justify-content: center;
   gap: 4px 6px;
   min-width: 0;
+  justify-self: center;
 }
 
 .main-nav button,
@@ -680,23 +669,14 @@ a:hover {
   animation: fx-nav-active 3.2s ease-in-out infinite;
 }
 
-/* Как у Wynncraft: логотип слева, рядом плоские текстовые пункты без «рамок-кнопок» */
-.site-header-start {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem 1rem;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
+/* Центральная колонка сетки — пункты по центру экрана; Wynncraft-стиль без «рамок-кнопок» */
 .main-nav.main-nav--wynncraft {
   justify-content: center;
-  flex: 1 1 auto;
   gap: 2px 2px;
 }
 
 .main-nav.main-nav--wynncraft button {
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-family: var(--font-heading);
   font-size: 0.8125rem;
   font-weight: 600;
   letter-spacing: 0.035em;
@@ -724,12 +704,31 @@ a:hover {
   box-shadow: none;
 }
 
+@media (max-width: 960px) {
+  .main-nav.main-nav--wynncraft button {
+    font-size: 0.75rem;
+    padding: 0.38rem 0.5rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .main-nav.main-nav--wynncraft button {
+    font-size: 0.68rem;
+    padding: 0.32rem 0.38rem;
+  }
+
+  .brand-logo {
+    margin-left: 2rem;
+  }
+}
+
 .nav-auth {
   display: flex;
   flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
   flex-shrink: 0;
+  justify-self: end;
 }
 
 .nav-user-btns,
@@ -740,14 +739,77 @@ a:hover {
   align-items: center;
 }
 
+/* Гость: слот как у аватара — пиксельный «?», фон прозрачный */
+.nav-guest-avatar-slot {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  box-sizing: border-box;
+  background: transparent;
+  border: 1px solid rgba(107, 90, 46, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-guest-avatar-slot-mark {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0;
+  color: rgba(200, 182, 150, 0.55);
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+  user-select: none;
+  transform: translateY(-1px);
+}
+
+.nav-user-identity {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.45rem;
+  max-width: min(42vw, 16rem);
+  min-width: 0;
+  flex-shrink: 1;
+}
+
+.nav-user-name {
+  font-family: var(--font-heading);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.04em;
+  color: rgba(232, 220, 196, 0.9);
+  min-width: 0;
+  max-width: 11rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nav-user-avatar {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 7px;
+  object-fit: cover;
+  object-position: center top;
+  border: 1px solid var(--border-gold-dim);
+  background: var(--bg-deep);
+  box-shadow: 0 0 0 1px rgba(13, 10, 18, 0.65);
+}
+
 /* ——— Кнопки ——— */
 .btn {
   font-family: var(--font-heading);
   font-weight: 400;
-  font-size: 0.85rem;
+  font-size: 0.94rem;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  padding: 0.65rem 1.25rem;
+  padding: 0.78rem 1.5rem;
   border-radius: 4px;
   border: 2px solid var(--border-gold-dim);
   background: linear-gradient(180deg, #2a2438, #1a1525);
@@ -800,13 +862,27 @@ a:hover {
 }
 
 .btn-small {
-  padding: 0.4rem 0.75rem;
-  font-size: 0.7rem;
+  padding: 0.46rem 0.85rem;
+  font-size: 0.76rem;
 }
 
 .site-header .btn-small {
-  padding: 0.28rem 0.55rem;
-  font-size: 0.65rem;
+  padding: 0.34rem 0.62rem;
+  font-size: 0.71rem;
+}
+
+/* Только гость: Вход / Регистрация — по высоте как слот аватара (32px) */
+.site-header #nav-guest .btn.btn-small {
+  min-height: 32px;
+  height: 32px;
+  padding: 0 0.72rem;
+  font-size: 0.66rem;
+  line-height: 1.1;
+  letter-spacing: 0.07em;
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ——— Макет страниц ——— */
@@ -828,6 +904,24 @@ a:hover {
 
 .view.is-visible {
   display: block;
+}
+
+/* «Как зайти» — плейсхолдер */
+.connect-in-dev {
+  text-align: center;
+  padding: 2rem 1.25rem 2.25rem;
+}
+
+.connect-in-dev-lead {
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: 1.2rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--text-parchment);
+  opacity: 0.9;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 
 @keyframes viewFadeIn {
@@ -933,12 +1027,6 @@ a:hover {
     filter: drop-shadow(-16px -14px 26px rgba(190, 135, 85, 0.16))
       drop-shadow(18px 20px 34px rgba(12, 6, 4, 0.23))
       drop-shadow(6px 8px 22px rgba(50, 28, 16, 0.09));
-  }
-
-  @media (hover: hover) and (pointer: fine) and (min-width: 721px) {
-    .site-footer-reveal .site-footer {
-      transition: transform 0.12s ease;
-    }
   }
 
   .feature-card:hover {
@@ -1088,7 +1176,7 @@ a:hover {
   position: relative;
   z-index: 0;
   margin: 0;
-  padding-top: 1.5rem;
+  padding-top: 3.25rem;
   line-height: 0;
   font-size: 0;
   overflow: visible;
@@ -1156,7 +1244,7 @@ a:hover {
 
 .hero-actions {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   justify-content: center;
   align-items: center;
   gap: 1.15rem;
@@ -1165,15 +1253,24 @@ a:hover {
   margin-top: 12rem;
   padding: 0 0.25rem 1.25rem;
   box-sizing: border-box;
-  overflow-x: auto;
-  overflow-y: hidden;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
+  overflow: visible;
 }
 
 .hero-actions .btn {
   flex: 0 0 auto;
   white-space: nowrap;
+}
+
+/*
+ * Главная: лого чуть ниже базового (+115px к padding-top; −10px к прошлому +125px).
+ * margin-top кнопок оставляем calc(12rem - 125px), чтобы блок кнопок поднялся вместе с лого на те же 10px.
+ */
+#view-home .hero h1.hero-title {
+  padding-top: calc(3.25rem + 115px);
+}
+
+#view-home .hero-actions {
+  margin-top: calc(12rem - 125px);
 }
 
 /* ——— Сетка карточек ——— */
@@ -2542,13 +2639,83 @@ label.admin-filter input {
 }
 
 .profile-modal-actions {
-  margin-top: 0.25rem;
+  display: flex;
+  width: 100%;
+  margin-top: 0.35rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.profile-modal-actions .btn-primary {
+  flex-shrink: 0;
+}
+
+.profile-modal-actions--solo {
   justify-content: flex-end;
+}
+
+/* Смена имени: обе кнопки слева в ряд, не по углам */
+.profile-modal-actions--lead {
+  justify-content: flex-start;
+}
+
+/* Смена имени: ширина колонки = ряд кнопок, поле ровно до края «Сохранить» */
+.profile-modal-field-stack {
+  display: inline-grid;
+  grid-template-columns: max-content;
+  justify-items: stretch;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+.profile-modal-field-stack > .form-group {
+  min-width: 0;
+}
+
+.profile-modal-field-stack > .form-group input {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
 }
 
 #profile-modal-change-msg {
   margin-bottom: 0.75rem;
   min-height: 0;
+}
+
+/* Смена имени: плотнее заголовок — подсказка — поле — кнопки */
+#profile-modal-change-name .profile-modal-title {
+  margin-bottom: 0.35rem;
+}
+
+#profile-modal-change-name .profile-modal-hint {
+  margin-bottom: 0.4rem;
+}
+
+#profile-modal-change-name #profile-modal-change-msg:empty {
+  display: none;
+  margin: 0;
+  padding: 0;
+  min-height: 0;
+  border: 0;
+}
+
+#profile-modal-change-name #profile-modal-change-msg:not(:empty) {
+  margin-bottom: 0.45rem;
+}
+
+#profile-modal-change-name .profile-modal-field-stack > .form-group {
+  margin-bottom: 0.3rem;
+}
+
+#profile-modal-change-name .profile-modal-field-stack > .form-group label {
+  margin-bottom: 0.22rem;
+}
+
+#profile-modal-change-name .profile-modal-field-stack > .form-actions.profile-modal-actions {
+  margin-top: 0.45rem;
 }
 
 #profile-modal-password-msg,
