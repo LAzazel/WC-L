@@ -41,7 +41,6 @@
     "register",
     "profile",
     "admin",
-    "processing",
   ]);
   let resetPasswordToken = null;
 
@@ -100,7 +99,6 @@
     register: document.getElementById("view-register"),
     profile: document.getElementById("view-profile"),
     admin: document.getElementById("view-admin"),
-    processing: document.getElementById("view-processing"),
   };
 
   const navButtons = document.querySelectorAll("[data-nav]");
@@ -108,6 +106,52 @@
   const guestBlock = document.getElementById("nav-guest");
   const userBlock = document.getElementById("nav-user");
   const userLabel = document.getElementById("nav-user-label");
+  const navMenuToggle = document.getElementById("nav-menu-toggle");
+  const navMobileScrim = document.getElementById("nav-mobile-scrim");
+  const mqNavMobile = window.matchMedia("(max-width: 767px)");
+
+  function closeNavMobile() {
+    document.documentElement.classList.remove("nav-mobile-open");
+    document.body.classList.remove("nav-mobile-open");
+    if (navMenuToggle) navMenuToggle.setAttribute("aria-expanded", "false");
+    if (navMobileScrim) navMobileScrim.setAttribute("aria-hidden", "true");
+  }
+
+  function setNavMobileOpen(open) {
+    if (!mqNavMobile.matches) {
+      document.documentElement.classList.remove("nav-mobile-open");
+      document.body.classList.remove("nav-mobile-open");
+      if (navMenuToggle) navMenuToggle.setAttribute("aria-expanded", "false");
+      if (navMobileScrim) navMobileScrim.setAttribute("aria-hidden", "true");
+      return;
+    }
+    const on = !!open;
+    document.documentElement.classList.toggle("nav-mobile-open", on);
+    document.body.classList.toggle("nav-mobile-open", on);
+    if (navMenuToggle) navMenuToggle.setAttribute("aria-expanded", on ? "true" : "false");
+    if (navMobileScrim) navMobileScrim.setAttribute("aria-hidden", on ? "false" : "true");
+  }
+
+  navMenuToggle?.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!mqNavMobile.matches) return;
+    setNavMobileOpen(!document.body.classList.contains("nav-mobile-open"));
+  });
+
+  navMobileScrim?.addEventListener("click", (e) => {
+    e.preventDefault();
+    closeNavMobile();
+  });
+
+  mqNavMobile.addEventListener("change", () => closeNavMobile());
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && document.body.classList.contains("nav-mobile-open")) {
+      e.preventDefault();
+      closeNavMobile();
+    }
+  });
 
   function getToken() {
     return localStorage.getItem(TOKEN_KEY);
@@ -260,8 +304,8 @@
   }
 
   const staffState = {
-    cache: { admin: null, processing: null },
-    selectedId: { admin: null, processing: null },
+    cache: { admin: null },
+    selectedId: { admin: null },
     myId: null,
   };
 
@@ -271,12 +315,6 @@
       detail: "admin-user-detail",
       search: "admin-user-search",
       msg: "admin-message",
-    },
-    processing: {
-      list: "processing-user-list",
-      detail: "processing-user-detail",
-      search: "processing-user-search",
-      msg: "processing-message",
     },
   };
 
@@ -334,7 +372,7 @@
       const avSrc = chain[0] || "";
       const isSel = sel === u.id;
       const imgOrPh = avSrc
-        ? `<img src="${escapeHtml(avSrc)}" alt="" width="40" height="40" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
+        ? `<img src="${escapeHtml(avSrc)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`
         : `<span class="staff-user-item-fallback">${initials}</span>`;
       li.innerHTML = `
         <button type="button" class="staff-user-item${isSel ? " is-selected" : ""}" data-staff-pick="${mode}" data-user-id="${u.id}">
@@ -395,7 +433,7 @@
           <div class="staff-detail-avatar-wrap">
             <div class="profile-avatar-frame staff-detail-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue:${hue}">
               <div class="profile-avatar-inner">
-                ${avSrc ? `<img class="profile-avatar-img" src="${escapeHtml(avSrc)}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />` : ""}
+                ${avSrc ? `<img class="profile-avatar-img" src="${escapeHtml(avSrc)}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />` : ""}
                 <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
               </div>
             </div>
@@ -460,6 +498,7 @@
   }
 
   function showView(name) {
+    closeNavMobile();
     persistCurrentView(name);
     document.body.setAttribute("data-view", name);
     Object.keys(views).forEach((key) => {
@@ -474,22 +513,31 @@
     if (name === "admin") loadStaffUsers("admin");
     if (name === "forgot-password") resetForgotPasswordUi();
     if (name === "cooperation") resetCooperationUi();
-    if (name === "processing") loadStaffUsers("processing");
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
     requestAnimationFrame(() => document.dispatchEvent(new CustomEvent("wc-l-layout-refresh")));
   }
 
+  function updateHeroRegisterVisibility() {
+    const btn = document.getElementById("btn-hero-register");
+    if (!btn) return;
+    btn.classList.toggle("hidden", !!getToken());
+  }
+
   function updateAuthNav() {
     const token = getToken();
+    updateHeroRegisterVisibility();
     if (guestBlock) guestBlock.classList.toggle("hidden", !!token);
     if (userBlock) userBlock.classList.toggle("hidden", !token);
     if (!token) {
+      clearNavHeaderAvatar();
+      if (userLabel) userLabel.textContent = "";
       return;
     }
     fetchAuthMeCached()
       .then((me) => {
         if (!me) return;
         if (userLabel) userLabel.textContent = me.username;
+        bindNavHeaderAvatar(me);
       })
       .catch(() => {
         setToken(null);
@@ -566,8 +614,19 @@
       msg.textContent = "";
       msg.className = "flash";
       const fd = new FormData(registerForm);
+      const usernameReg = String(fd.get("username") || "").trim();
+      if (usernameReg.length < 3) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Имя героя — не короче 3 символов.";
+        return;
+      }
+      if (usernameReg.length > 18) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Имя героя — не длиннее 18 символов.";
+        return;
+      }
       const payload = {
-        username: fd.get("username"),
+        username: usernameReg,
         email: fd.get("email"),
         password: fd.get("password"),
       };
@@ -600,19 +659,43 @@
     const msg = document.getElementById("cooperation-message");
     const fd = new FormData(form);
     const contact = String(fd.get("contact") || "").trim();
-    const skills = String(fd.get("skills") || "").trim();
-    if (contact.length < 3 || skills.length < 10) {
+    if (contact.length < 3) {
       if (msg) {
         msg.className = "flash flash-error";
-        msg.textContent = "Заполните все поля заявки чуть подробнее.";
+        msg.textContent = "Укажите контакт не короче 3 символов.";
       }
+      return;
+    }
+    const endpoint = form.getAttribute("data-cooperation-endpoint")?.trim();
+    if (endpoint) {
+      void (async () => {
+        try {
+          let path = endpoint;
+          if (path.startsWith("/api/v1")) path = path.slice("/api/v1".length) || "/";
+          if (!path.startsWith("/")) path = `/${path}`;
+          await apiFetch(path, {
+            method: form.getAttribute("data-cooperation-method")?.trim() || "POST",
+            body: { contact },
+          });
+          if (msg) {
+            msg.className = "flash flash-success";
+            msg.textContent = "Заявка отправлена.";
+          }
+          form.reset();
+        } catch (err) {
+          if (msg) {
+            msg.className = "flash flash-error";
+            msg.textContent = err.message || "Не удалось отправить.";
+          }
+        }
+      })();
       return;
     }
     if (msg) {
       msg.className = "flash flash-success";
-      msg.textContent = "Заявка принята. После подключения системы обработки она будет доступна администраторам.";
+      msg.textContent =
+        "Спасибо — мы записали ваш контакт и свяжемся с вами, когда гонцы дойдут до столицы.";
     }
-    // TODO(backend): отправлять заявку на сотрудничество админам и выводить её во вкладке обработки.
     form.reset();
   });
 
@@ -620,6 +703,8 @@
   const MC_HEAD_MAIN = 128;
   /** Превью в меню «Внешний вид» (крупнее для сетки). */
   const MC_HEAD_MENU = 48;
+  /** Аватар в шапке (рядом с ником). */
+  const MC_HEAD_NAV = 32;
   const MC_AVATAR_VARIANTS = Object.freeze([
     { id: "coin_spin", headName: null, label: "Монета", asset: "img/avatar-1.gif" },
     {
@@ -727,8 +812,7 @@
     deco.src = localStaticUrl(def.asset);
   }
 
-  function renderProfileFrameTilesHtml(currentFrameId, tileSize) {
-    const sz = tileSize != null ? tileSize : MC_HEAD_MENU;
+  function renderProfileFrameTilesHtml(currentFrameId, _tileSize) {
     return PROFILE_FRAME_VARIANTS.map((v) => {
       const sel = v.id === currentFrameId ? " is-selected" : "";
       const title = escapeHtml(v.label);
@@ -737,7 +821,7 @@
         inner = '<span class="profile-frame-tile-none" aria-hidden="true">—</span>';
       } else if (v.asset) {
         const src = localStaticUrl(v.asset);
-        inner = `<img src="${src}" alt="" width="${sz}" height="${sz}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
+        inner = `<img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />`;
       }
       return `<button type="button" class="profile-frame-tile${sel}" role="menuitem" data-profile-frame="${v.id}" title="${title}" aria-label="${title}">${inner}</button>`;
     }).join("");
@@ -750,7 +834,7 @@
       const src = mcAvatarMenuTileSrc(username, v, userId);
       const title = escapeHtml(v.label);
       return `<button type="button" class="profile-avatar-tile${sel}" role="menuitem" data-mc-variant="${v.id}" title="${title}" aria-label="${title}">
-        <img src="${src}" alt="" width="${MC_HEAD_MENU}" height="${MC_HEAD_MENU}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+        <img src="${src}" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
       </button>`;
     }).join("");
     const frameTiles = renderProfileFrameTilesHtml(currentFrameId, MC_HEAD_MENU);
@@ -859,6 +943,7 @@
     return apiFetch("/auth/me", { method: "PATCH", body: { mc_avatar_variant: variantId } })
       .then(() => {
         invalidateAuthMeCache();
+        updateAuthNav();
       })
       .catch(() => {});
   }
@@ -927,6 +1012,41 @@
       `https://minotar.net/helm/${encodeURIComponent(skin)}/${size}`,
       `https://mc-heads.net/avatar/Steve/${size}`,
     ]);
+  }
+
+  function bindNavHeaderAvatar(me) {
+    const img = document.getElementById("nav-user-avatar");
+    if (!img || !me) return;
+    const variantId = resolveMcVariantForUser(me);
+    const chain = avatarUrlChain(me.username, variantId, MC_HEAD_NAV, me.id);
+    if (!chain.length) {
+      img.removeAttribute("src");
+      img.onerror = null;
+      img.onload = null;
+      return;
+    }
+    let attempt = 0;
+    img.onerror = function () {
+      attempt += 1;
+      if (attempt < chain.length) {
+        img.src = chain[attempt];
+        return;
+      }
+      img.removeAttribute("src");
+      img.onerror = null;
+    };
+    img.onload = function () {
+      img.onload = null;
+    };
+    img.src = chain[0];
+  }
+
+  function clearNavHeaderAvatar() {
+    const img = document.getElementById("nav-user-avatar");
+    if (!img) return;
+    img.removeAttribute("src");
+    img.onerror = null;
+    img.onload = null;
   }
 
   function bindProfileAvatarImage(box, username, variantId) {
@@ -1143,11 +1263,11 @@
                   <div class="profile-avatar-stack">
                     <div class="profile-avatar-frame" data-avatar-variant="${escapeHtml(variantId)}" style="--avatar-hue: ${hue}">
                       <div class="profile-avatar-inner">
-                        <img class="profile-avatar-img" src="${avatarUrl}" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
+                        <img class="profile-avatar-img" src="${avatarUrl}" alt="" loading="eager" decoding="async" fetchpriority="high" referrerpolicy="no-referrer" />
                         <div class="profile-avatar-fallback" aria-hidden="true">${initials}</div>
                       </div>
                     </div>
-                    <img class="profile-avatar-frame-deco is-hidden" alt="" width="${MC_HEAD_MAIN}" height="${MC_HEAD_MAIN}" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
+                    <img class="profile-avatar-frame-deco is-hidden" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" />
                   </div>
                 </div>
               </div>
@@ -1176,9 +1296,7 @@
       box.dataset.profileUserId = String(me.id);
       box.dataset.profileUsername = me.username;
       const guardiansBtn = document.getElementById("btn-profile-guardians");
-      const processingBtn = document.getElementById("btn-profile-processing");
       if (guardiansBtn) guardiansBtn.classList.toggle("hidden", !me.is_admin);
-      if (processingBtn) processingBtn.classList.toggle("hidden", !me.is_admin);
       bindProfileAvatarImage(box, me.username, variantId);
       bindMcAvatarMenuTiles(box);
       applyProfileFrameOverlay(box, me.id);
@@ -1192,7 +1310,7 @@
     const pick = e.target.closest("[data-staff-pick]");
     if (!pick) return;
     const mode = pick.getAttribute("data-staff-pick");
-    if (mode !== "admin" && mode !== "processing") return;
+    if (mode !== "admin") return;
     const id = Number(pick.getAttribute("data-user-id"), 10);
     staffState.selectedId[mode] = id;
     syncStaffListAndDetail(mode);
@@ -1205,7 +1323,7 @@
     const mode = btn.getAttribute("data-staff-mode");
     const id = Number(btn.getAttribute("data-user-id"), 10);
     const toTrue = btn.getAttribute("data-to") === "true";
-    if (!mode || (mode !== "admin" && mode !== "processing")) return;
+    if (!mode || mode !== "admin") return;
     const els = getStaffEls(mode);
     const msg = els && els.msg;
     btn.disabled = true;
@@ -1233,10 +1351,7 @@
     }
   });
 
-  ["admin", "processing"].forEach((mode) => {
-    const els = getStaffEls(mode);
-    els.search?.addEventListener("input", () => syncStaffListAndDetail(mode));
-  });
+  getStaffEls("admin")?.search?.addEventListener("input", () => syncStaffListAndDetail("admin"));
 
   function escapeHtml(s) {
     const d = document.createElement("div");
@@ -1489,6 +1604,182 @@
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = submitBtn.dataset.label || "Сохранить пароль";
+      }
+    }
+  });
+
+  function resetProfileChangeNameModalUi() {
+    const msg = document.getElementById("profile-modal-change-msg");
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    document.getElementById("form-profile-change-username")?.reset();
+  }
+
+  function resetProfileChangePasswordModalUi() {
+    const msg = document.getElementById("profile-modal-password-msg");
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    document.getElementById("form-profile-change-password")?.reset();
+  }
+
+  document.getElementById("btn-profile-modal-cancel")?.addEventListener("click", () => {
+    resetProfileChangeNameModalUi();
+    closeProfileModals();
+  });
+
+  document.getElementById("btn-profile-password-cancel")?.addEventListener("click", () => {
+    resetProfileChangePasswordModalUi();
+    closeProfileModals();
+  });
+
+  document.getElementById("profile-modal-scrim")?.addEventListener("click", () => {
+    resetProfileChangeNameModalUi();
+    resetProfileChangePasswordModalUi();
+    closeProfileModals();
+  });
+
+  document.getElementById("btn-profile-forgot-password")?.addEventListener("click", () => {
+    openForgotPasswordFromProfileModal();
+  });
+
+  document.getElementById("btn-profile-forgot-done")?.addEventListener("click", () => {
+    closeProfileModals();
+  });
+
+  document.getElementById("btn-profile-reset-password-cancel")?.addEventListener("click", () => {
+    document.getElementById("form-profile-reset-password")?.reset();
+    const msg = document.getElementById("profile-modal-reset-password-msg");
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    closeProfileModals();
+  });
+
+  document.getElementById("form-profile-change-username")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!getToken()) {
+      closeProfileModals();
+      showView("login");
+      return;
+    }
+    const msg = document.getElementById("profile-modal-change-msg");
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    const fd = new FormData(e.currentTarget);
+    const username = String(fd.get("username") || "").trim();
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    if (username.length < 3) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Имя — не короче 3 символов.";
+      }
+      return;
+    }
+    if (username.length > 18) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Имя — не длиннее 18 символов.";
+      }
+      return;
+    }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.dataset.label = submitBtn.textContent;
+      submitBtn.textContent = "Сохраняем…";
+    }
+    try {
+      await apiFetch("/auth/me", { method: "PATCH", body: { username } });
+      invalidateAuthMeCache();
+      if (msg) {
+        msg.className = "flash flash-success";
+        msg.textContent = "Имя героя обновлено.";
+      }
+      updateAuthNav();
+      window.setTimeout(() => {
+        resetProfileChangeNameModalUi();
+        closeProfileModals();
+        loadProfile();
+      }, 450);
+    } catch (err) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = err.message || "Не удалось сохранить имя.";
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitBtn.dataset.label || "Сохранить";
+      }
+    }
+  });
+
+  document.getElementById("form-profile-change-password")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (!getToken()) {
+      closeProfileModals();
+      showView("login");
+      return;
+    }
+    const msg = document.getElementById("profile-modal-password-msg");
+    const submitBtn = e.currentTarget.querySelector('button[type="submit"]');
+    const fd = new FormData(e.currentTarget);
+    const current_password = String(fd.get("current_password") || "");
+    const new_password = String(fd.get("new_password") || "");
+    const confirmPw = String(fd.get("new_password_confirm") || "");
+    if (msg) {
+      msg.textContent = "";
+      msg.className = "flash";
+    }
+    if (new_password !== confirmPw) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Новый пароль и повтор не совпадают.";
+      }
+      return;
+    }
+    if (new_password.length < 8) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = "Пароль должен быть не короче 8 символов.";
+      }
+      return;
+    }
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.dataset.label = submitBtn.textContent;
+      submitBtn.textContent = "Меняем…";
+    }
+    try {
+      await apiFetch("/auth/me/password", {
+        method: "PATCH",
+        body: { current_password, new_password },
+      });
+      invalidateAuthMeCache();
+      if (msg) {
+        msg.className = "flash flash-success";
+        msg.textContent = "Пароль изменён.";
+      }
+      e.currentTarget.reset();
+      window.setTimeout(() => {
+        resetProfileChangePasswordModalUi();
+        closeProfileModals();
+      }, 500);
+    } catch (err) {
+      if (msg) {
+        msg.className = "flash flash-error";
+        msg.textContent = err.message || "Не удалось сменить пароль.";
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = submitBtn.dataset.label || "Применить";
       }
     }
   });
